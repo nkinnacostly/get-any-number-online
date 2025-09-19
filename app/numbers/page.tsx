@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -13,7 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { SMSPoolService } from "@/services/sms-pool-api";
 import { Phone, RefreshCw } from "lucide-react";
 
-export default function NumbersPage() {
+function NumbersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -89,3 +90,16 @@ export default function NumbersPage() {
     </div>
   );
 }
+
+// Export with dynamic rendering to prevent prerendering issues
+export default dynamic(() => Promise.resolve(NumbersPage), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p>Loading numbers...</p>
+      </div>
+    </div>
+  ),
+});
