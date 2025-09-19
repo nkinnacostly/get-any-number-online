@@ -56,58 +56,31 @@ export function Navbar() {
 
           {/* Navigation Links - Centered */}
           <div className="hidden md:flex items-center space-x-8">
-            {user ? (
+            {user && (
               <>
                 <Link
                   href="/dashboard"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium hover:text-foreground transition-colors"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/numbers"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium hover:text-foreground transition-colors"
                 >
                   Numbers
                 </Link>
                 <Link
                   href="/messages"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium hover:text-foreground transition-colors"
                 >
                   Messages
                 </Link>
                 <Link
                   href="/wallet"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm font-medium hover:text-foreground transition-colors"
                 >
                   Wallet
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/features"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Features
-                </Link>
-                <Link
-                  href="/solutions"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Solutions
-                </Link>
-                <Link
-                  href="/resources"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Resources
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Pricing
                 </Link>
               </>
             )}
@@ -168,7 +141,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   onClick={() => router.push("/login")}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="hover:text-foreground"
                 >
                   Sign in
                 </Button>
@@ -185,7 +158,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden text-muted-foreground hover:text-foreground"
+              className="md:hidden hover:text-foreground"
               onClick={toggleMobileMenu}
             >
               {isMobileMenuOpen ? (
@@ -205,28 +178,28 @@ export function Navbar() {
                 <>
                   <Link
                     href="/dashboard"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
+                    className="block text-sm font-medium hover:text-foreground"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Dashboard
                   </Link>
                   <Link
                     href="/numbers"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
+                    className="block text-sm font-medium hover:text-foreground"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Numbers
                   </Link>
                   <Link
                     href="/messages"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
+                    className="block text-sm font-medium hover:text-foreground"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Messages
                   </Link>
                   <Link
                     href="/wallet"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
+                    className="block text-sm font-medium hover:text-foreground"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Wallet
@@ -234,42 +207,16 @@ export function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link
-                    href="/features"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Features
-                  </Link>
-                  <Link
-                    href="/solutions"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Solutions
-                  </Link>
-                  <Link
-                    href="/resources"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Resources
-                  </Link>
-                  <Link
-                    href="/pricing"
-                    className="block text-sm font-medium text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Pricing
-                  </Link>
-                  <div className="pt-4 border-t border-border space-y-2">
+
+                  <div className=" space-y-2">
                     <Button
-                      variant="ghost"
+                      // variant="ghost"
                       onClick={() => {
                         router.push("/login");
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full justify-start text-muted-foreground hover:text-foreground"
+                      className="w-full bg-primary  hover:bg-primary/90 rounded-lg"
+
                     >
                       Sign in
                     </Button>
@@ -278,7 +225,7 @@ export function Navbar() {
                         router.push("/signup");
                         setIsMobileMenuOpen(false);
                       }}
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg"
+                      className="w-full bg-primary  hover:bg-primary/90 rounded-lg"
                     >
                       Get demo
                     </Button>

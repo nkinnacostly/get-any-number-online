@@ -1,6 +1,15 @@
 // supabase/functions/smspool-proxy/index.ts
+// @ts-ignore - Deno imports
 import { serve } from "https://deno.land/std@0.170.0/http/server.ts";
+// @ts-ignore - Deno imports
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+// Type declarations for Deno environment
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
 
 const SUPABASE_URL = Deno.env.get("NEXT_PUBLIC_SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get(
@@ -10,7 +19,7 @@ const SMSPOOL_KEY = Deno.env.get("NEXT_PUBLIC_SMSPOOL_API_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-serve(async (req) => {
+serve(async (req: Request) => {
   const url = new URL(req.url);
   console.log(`Request: ${req.method} ${url.pathname}`);
 
