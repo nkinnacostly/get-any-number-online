@@ -186,14 +186,14 @@ function DashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex">
-        {/* Fixed Sidebar - 300px width, full height */}
-        <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+      <div className="min-h-screen bg-background">
+        {/* Desktop Sidebar - Hidden on mobile */}
+        <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
           <Sidebar className="h-full" />
         </div>
 
-        {/* Main Content Area - takes remaining width */}
-        <div className="flex-1 ml-[300px]">
+        {/* Main Content Area */}
+        <div className="lg:ml-[300px]">
           <Navbar />
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
@@ -218,47 +218,60 @@ function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Fixed Sidebar - 300px width, full height */}
-      <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+    <div className="min-h-screen bg-background">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
         <Sidebar className="h-full" />
       </div>
 
-      {/* Main Content Area - takes remaining width */}
-      <div className="flex-1 ml-[300px]">
+      {/* Main Content Area */}
+      <div className="lg:ml-[300px] transition-all duration-300 ease-in-out">
         <Navbar />
-        <main className="p-8">
+        <main className="p-4 md:p-6 lg:p-8 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
           {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 space-y-4 md:space-y-0">
+              <div className="animate-in fade-in-0 slide-in-from-left-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2 transition-all duration-300">
                   Hello,{" "}
-                  {user?.user_metadata?.full_name ||
-                    user?.email?.split("@")[0] ||
-                    "User"}
+                  <span className="bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                    {user?.user_metadata?.full_name ||
+                      user?.email?.split("@")[0] ||
+                      "User"}
+                  </span>
                   !
                 </h1>
-                <p className="text-muted-foreground text-lg">
+                <p className="text-muted-foreground text-base md:text-lg transition-all duration-300">
                   Explore information and activity about your SMS numbers.
                 </p>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div
+                className="flex items-center space-x-2 md:space-x-4 animate-in fade-in-0 slide-in-from-right-4"
+                style={{ animationDelay: "200ms" }}
+              >
+                <div className="relative flex-1 md:flex-none">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-200" />
                   <input
                     type="text"
                     placeholder="Search..."
-                    className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-auto transition-all duration-200 hover:border-primary/50 focus:scale-105"
                   />
                 </div>
-                <Button variant="ghost" size="icon" className="relative">
-                  <MessageSquare className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full"></span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative transition-all duration-200 hover:scale-110 hover:bg-muted/50"
+                >
+                  <MessageSquare className="h-5 w-5 transition-transform duration-200" />
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full animate-pulse"></span>
                 </Button>
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full"></span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative transition-all duration-200 hover:scale-110 hover:bg-muted/50"
+                >
+                  <Bell className="h-5 w-5 transition-transform duration-200" />
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full animate-pulse"></span>
                 </Button>
               </div>
             </div>
@@ -271,56 +284,62 @@ function DashboardPage() {
           </div>
 
           {/* Stats Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <Card className="relative overflow-hidden">
-              <CardContent className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+            <Card className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg group animate-in fade-in-0 slide-in-from-bottom-4">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1 transition-colors duration-200">
                       Total Numbers
                     </p>
-                    <p className="text-3xl font-bold text-foreground">
+                    <p className="text-2xl md:text-3xl font-bold text-foreground transition-all duration-200 group-hover:text-primary">
                       {stats.totalNumbers}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Phone className="h-8 w-8 text-primary" />
+                    <Phone className="h-6 w-6 md:h-8 md:w-8 text-primary transition-transform duration-200 group-hover:scale-110 group-hover:rotate-12" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden">
-              <CardContent className="p-6">
+            <Card
+              className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg group animate-in fade-in-0 slide-in-from-bottom-4"
+              style={{ animationDelay: "100ms" }}
+            >
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1 transition-colors duration-200">
                       Active Numbers
                     </p>
-                    <p className="text-3xl font-bold text-foreground">
+                    <p className="text-2xl md:text-3xl font-bold text-foreground transition-all duration-200 group-hover:text-primary">
                       {stats.activeNumbers}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Users className="h-8 w-8 text-primary" />
+                    <Users className="h-6 w-6 md:h-8 md:w-8 text-primary transition-transform duration-200 group-hover:scale-110 group-hover:rotate-12" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="relative overflow-hidden">
-              <CardContent className="p-6">
+            <Card
+              className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg group animate-in fade-in-0 slide-in-from-bottom-4"
+              style={{ animationDelay: "200ms" }}
+            >
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-1 transition-colors duration-200">
                       Messages Received
                     </p>
-                    <p className="text-3xl font-bold text-foreground">
+                    <p className="text-2xl md:text-3xl font-bold text-foreground transition-all duration-200 group-hover:text-primary">
                       {stats.totalMessages}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <MessageSquare className="h-8 w-8 text-primary" />
+                    <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-primary transition-transform duration-200 group-hover:scale-110 group-hover:rotate-12" />
                   </div>
                 </div>
               </CardContent>

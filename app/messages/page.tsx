@@ -50,14 +50,14 @@ export default function MessagesPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex">
-        {/* Fixed Sidebar - 300px width, full height */}
-        <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+      <div className="min-h-screen bg-background">
+        {/* Desktop Sidebar - Hidden on mobile */}
+        <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
           <Sidebar className="h-full" />
         </div>
 
-        {/* Main Content Area - takes remaining width */}
-        <div className="flex-1 ml-[300px]">
+        {/* Main Content Area */}
+        <div className="lg:ml-[300px]">
           <Navbar />
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
@@ -75,16 +75,16 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Fixed Sidebar - 300px width, full height */}
-      <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+    <div className="min-h-screen bg-background">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
         <Sidebar className="h-full" />
       </div>
 
-      {/* Main Content Area - takes remaining width */}
-      <div className="flex-1 ml-[300px]">
+      {/* Main Content Area */}
+      <div className="lg:ml-[300px] transition-all duration-300 ease-in-out">
         <Navbar />
-        <main className="p-6">
+        <main className="p-4 md:p-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
           <MessagesList
             messages={messages}
             onRefresh={fetchMessages}

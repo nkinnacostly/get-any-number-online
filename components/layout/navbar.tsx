@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MobileSidebar } from "@/components/layout/sidebar";
 
 export function Navbar() {
   const { user, signOut } = useAuth();
@@ -38,6 +39,8 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo Section */}
           <div className="flex items-center">
+            {/* Mobile Sidebar for authenticated users */}
+            {user && <MobileSidebar />}
             <Link href="/" className="flex items-center space-x-3">
               {/* SMS Pool logo */}
               <div className="w-8 h-8 bg-card rounded-lg shadow-sm flex items-center justify-center border border-border">
@@ -52,38 +55,6 @@ export function Navbar() {
                 SMS Pool
               </span>
             </Link>
-          </div>
-
-          {/* Navigation Links - Centered */}
-          <div className="hidden md:flex items-center space-x-8">
-            {user && (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-sm font-medium hover:text-foreground transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/numbers"
-                  className="text-sm font-medium hover:text-foreground transition-colors"
-                >
-                  Numbers
-                </Link>
-                <Link
-                  href="/messages"
-                  className="text-sm font-medium hover:text-foreground transition-colors"
-                >
-                  Messages
-                </Link>
-                <Link
-                  href="/wallet"
-                  className="text-sm font-medium hover:text-foreground transition-colors"
-                >
-                  Wallet
-                </Link>
-              </>
-            )}
           </div>
 
           {/* Right Side Actions */}
@@ -154,60 +125,32 @@ export function Navbar() {
               </div>
             )}
 
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden hover:text-foreground"
-              onClick={toggleMobileMenu}
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
+            {/* Mobile Menu Button - Only for non-authenticated users */}
+            {!user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden hover:text-foreground transition-all duration-200 hover:scale-110 hover:bg-muted/50"
+                onClick={toggleMobileMenu}
+              >
+                <div className="relative">
+                  {isMobileMenuOpen ? (
+                    <X className="h-5 w-5 transition-transform duration-200 rotate-180" />
+                  ) : (
+                    <Menu className="h-5 w-5 transition-transform duration-200" />
+                  )}
+                </div>
+              </Button>
+            )}
           </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border bg-background">
+          <div className="md:hidden border-t border-border bg-background animate-in slide-in-from-top-2 duration-200">
             <div className="px-4 py-4 space-y-4">
-              {user ? (
+              {!user && (
                 <>
-                  <Link
-                    href="/dashboard"
-                    className="block text-sm font-medium hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/numbers"
-                    className="block text-sm font-medium hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Numbers
-                  </Link>
-                  <Link
-                    href="/messages"
-                    className="block text-sm font-medium hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Messages
-                  </Link>
-                  <Link
-                    href="/wallet"
-                    className="block text-sm font-medium hover:text-foreground"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Wallet
-                  </Link>
-                </>
-              ) : (
-                <>
-
                   <div className=" space-y-2">
                     <Button
                       // variant="ghost"
@@ -216,7 +159,6 @@ export function Navbar() {
                         setIsMobileMenuOpen(false);
                       }}
                       className="w-full bg-primary  hover:bg-primary/90 rounded-lg"
-
                     >
                       Sign in
                     </Button>
