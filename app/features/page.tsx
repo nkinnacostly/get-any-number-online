@@ -383,7 +383,7 @@ export default function FeaturesPage() {
               viewport={{ once: true }}
             >
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Why Choose SMS Pool?
+                Why Choose Get Any Number Online?
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 See how we compare to other SMS verification services
@@ -401,7 +401,7 @@ export default function FeaturesPage() {
                             Feature
                           </th>
                           <th className="text-center py-4 px-4 font-semibold text-blue-600">
-                            SMS Pool
+                            Get Any Number Online
                           </th>
                           <th className="text-center py-4 px-4 font-semibold text-gray-600">
                             Competitors
@@ -498,8 +498,8 @@ export default function FeaturesPage() {
                 Ready to experience these features?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                Start your free trial today and see how SMS Pool can transform
-                your verification workflow.
+                Start your free trial today and see how Get Any Number Online
+                can transform your verification workflow.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

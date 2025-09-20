@@ -651,8 +651,8 @@ export default function PricingPage() {
                 Ready to get started?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                Choose your plan and start using SMS Pool today. No setup fees,
-                no long-term contracts.
+                Choose your plan and start using Get Any Number Online today. No
+                setup fees, no long-term contracts.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -22,6 +22,7 @@ import {
   CreditCard,
   Menu,
 } from "lucide-react";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 
 const navigation = [
   {
@@ -69,6 +70,7 @@ export function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { unreadCount, loading } = useUnreadMessages();
 
   const SidebarContent = () => (
     <div className={cn("h-full flex flex-col", className)}>
@@ -76,7 +78,7 @@ export function Sidebar({
         <div className="space-y-4 py-4">
           <div className="px-3 py-2">
             <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-foreground">
-              SMS Pool
+              Get Any Number Online
             </h2>
             <div className="space-y-1">
               {navigation.map((item, index) => (
@@ -98,12 +100,12 @@ export function Sidebar({
                     <span className="transition-all duration-200">
                       {item.name}
                     </span>
-                    {item.name === "Messages" && (
+                    {item.name === "Messages" && unreadCount > 0 && (
                       <Badge
                         variant="destructive"
                         className="ml-auto transition-all duration-200 group-hover:scale-110 animate-pulse"
                       >
-                        3
+                        {unreadCount}
                       </Badge>
                     )}
                   </Link>

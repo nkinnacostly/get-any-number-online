@@ -394,7 +394,7 @@ export default function SolutionsPage() {
                 Common Use Cases
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                How businesses use SMS Pool for verification
+                How businesses use Get Any Number Online for verification
               </p>
             </motion.div>
 
@@ -519,7 +519,7 @@ export default function SolutionsPage() {
               viewport={{ once: true }}
             >
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Why Choose SMS Pool?
+                Why Choose Get Any Number Online?
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 The benefits of using our SMS verification platform
@@ -624,8 +624,8 @@ export default function SolutionsPage() {
                 Success Stories
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                See how companies are using SMS Pool to improve their
-                verification processes
+                See how companies are using Get Any Number Online to improve
+                their verification processes
               </p>
             </motion.div>
 
@@ -653,8 +653,9 @@ export default function SolutionsPage() {
                       </div>
                     </div>
                     <p className="text-gray-600 mb-4">
-                      "SMS Pool helped us reduce fake registrations by 95% and
-                      improved our user onboarding process significantly."
+                      "Get Any Number Online helped us reduce fake registrations
+                      by 95% and improved our user onboarding process
+                      significantly."
                     </p>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <TrendingUp className="h-4 w-4" />
@@ -745,8 +746,8 @@ export default function SolutionsPage() {
                 Ready to transform your verification process?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                Join thousands of businesses that trust SMS Pool for their SMS
-                verification needs.
+                Join thousands of businesses that trust Get Any Number Online
+                for their SMS verification needs.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -31,7 +31,7 @@ export function SignupForm() {
     setError("");
 
     try {
-      const { error } = await signUp(email, password);
+      const { error } = await signUp(email, password, fullName);
       if (error) {
         setError(error.message);
       } else {
@@ -86,7 +86,7 @@ export function SignupForm() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-16 md:pt-20">
       <Card className="w-full max-w-md bg-card rounded-lg shadow-lg border border-border">
         <CardHeader className="space-y-4 md:space-y-6 pt-6 md:pt-8 pb-4 md:pb-6">
-          {/* SMS Pool Logo */}
+          {/* Get Any Number Online Logo */}
           <div className="flex justify-center">
             <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg border border-border">
               <div className="grid grid-cols-2 gap-1">
@@ -100,7 +100,7 @@ export function SignupForm() {
 
           <div className="text-center space-y-2">
             <CardTitle className="text-xl md:text-2xl font-bold text-card-foreground">
-              Join SMS Pool
+              Join Get Any Number Online
             </CardTitle>
             <CardDescription className="text-sm md:text-base text-muted-foreground">
               Create your account and start verifying SMS
@@ -231,7 +231,7 @@ export function SignupForm() {
 
       {/* Legal Disclaimer */}
       {/* <div className="absolute bottom-2 md:bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground text-center max-w-sm md:max-w-md px-2 md:px-4">
-        By clicking "Create account", you agree to SMS Pool's{" "}
+        By clicking "Create account", you agree to Get Any Number Online's{" "}
         <a href="#" className="underline hover:text-foreground">
           User Agreement
         </a>

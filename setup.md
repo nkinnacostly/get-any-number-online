@@ -1,4 +1,4 @@
-# SMS Pool Platform Setup Guide
+# Get Any Number Online Platform Setup Guide
 
 ## Quick Start Checklist
 
@@ -118,4 +118,4 @@ For issues or questions:
 
 ---
 
-Your SMS Pool platform is now ready! 🚀
+Your Get Any Number Online platform is now ready! 🚀

@@ -42,7 +42,7 @@ export function Navbar() {
             {/* Mobile Sidebar for authenticated users */}
             {user && <MobileSidebar />}
             <Link href="/" className="flex items-center space-x-3">
-              {/* SMS Pool logo */}
+              {/* Get Any Number Online logo */}
               <div className="w-8 h-8 bg-card rounded-lg shadow-sm flex items-center justify-center border border-border">
                 <div className="grid grid-cols-2 gap-1">
                   <div className="w-2 h-2 bg-primary rounded-sm"></div>
@@ -52,7 +52,7 @@ export function Navbar() {
                 </div>
               </div>
               <span className="font-bold text-xl text-foreground">
-                SMS Pool
+                Get Any Number Online
               </span>
             </Link>
           </div>

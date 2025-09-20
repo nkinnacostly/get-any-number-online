@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SMS Pool Platform",
+  title: "Get Any Number Online Platform",
   description: "Purchase virtual phone numbers for SMS verification",
 };
 
@@ -28,7 +28,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider defaultTheme="system" storageKey="sms-pool-theme">
+        <ThemeProvider
+          defaultTheme="system"
+          storageKey="get-any-number-online-theme"
+        >
           {children}
         </ThemeProvider>
       </body>

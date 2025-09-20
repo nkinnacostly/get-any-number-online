@@ -67,8 +67,8 @@ export default function ResourcesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
               >
-                Everything you need to get started with SMS Pool, from quick
-                guides to comprehensive API documentation.
+                Everything you need to get started with Get Any Number Online,
+                from quick guides to comprehensive API documentation.
               </motion.p>
 
               <motion.div
@@ -111,7 +111,7 @@ export default function ResourcesPage() {
                 Quick Start Guide
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Get up and running with SMS Pool in minutes
+                Get up and running with Get Any Number Online in minutes
               </p>
             </motion.div>
 
@@ -260,7 +260,7 @@ export default function ResourcesPage() {
                     </div>
                     <CardTitle className="text-xl">Getting Started</CardTitle>
                     <CardDescription>
-                      Learn the basics of SMS Pool platform
+                      Learn the basics of Get Any Number Online platform
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -673,8 +673,8 @@ export default function ResourcesPage() {
                 Ready to get started?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                Join thousands of developers who trust SMS Pool for their
-                verification needs.
+                Join thousands of developers who trust Get Any Number Online for
+                their verification needs.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

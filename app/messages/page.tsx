@@ -41,6 +41,20 @@ export default function MessagesPage() {
         .order("receive_date", { ascending: false });
 
       setMessages((recentMessages as any) || []);
+
+      // Mark all messages as read when user visits the messages page
+      if (recentMessages && recentMessages.length > 0) {
+        const unreadMessageIds = recentMessages
+          .filter((msg: any) => !msg.is_read)
+          .map((msg: any) => msg.id);
+
+        if (unreadMessageIds.length > 0) {
+          await supabase
+            .from("received_messages")
+            .update({ is_read: true })
+            .in("id", unreadMessageIds);
+        }
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {

@@ -1,4 +1,4 @@
-# SMS Pool Platform
+# Get Any Number Online Platform
 
 A comprehensive platform for purchasing virtual phone numbers for SMS verification, built with Next.js, Supabase, and shadcn/ui.
 
@@ -35,7 +35,7 @@ A comprehensive platform for purchasing virtual phone numbers for SMS verificati
 
    ```bash
    git clone <your-repo-url>
-   cd mysms-pool
+   cd get-any-number-online
    ```
 
 2. **Install dependencies**
