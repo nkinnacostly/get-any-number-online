@@ -86,11 +86,14 @@ export function Sidebar({
         fetchWalletBalance();
       };
 
-      window.addEventListener("walletUpdated", handleWalletUpdate);
+      // Only add event listeners on client side
+      if (typeof window !== "undefined") {
+        window.addEventListener("walletUpdated", handleWalletUpdate);
 
-      return () => {
-        window.removeEventListener("walletUpdated", handleWalletUpdate);
-      };
+        return () => {
+          window.removeEventListener("walletUpdated", handleWalletUpdate);
+        };
+      }
     }
   }, [user]);
 
