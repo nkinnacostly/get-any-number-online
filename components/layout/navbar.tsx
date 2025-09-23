@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,46 @@ import { useAuth } from "@/hooks/useAuth";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileSidebar } from "@/components/layout/sidebar";
+import { supabase } from "@/lib/supabase";
 
 export function Navbar() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchWalletBalance();
+
+      // Listen for wallet updates
+      const handleWalletUpdate = () => {
+        fetchWalletBalance();
+      };
+
+      window.addEventListener("walletUpdated", handleWalletUpdate);
+
+      return () => {
+        window.removeEventListener("walletUpdated", handleWalletUpdate);
+      };
+    }
+  }, [user]);
+
+  const fetchWalletBalance = async () => {
+    if (!user) return;
+
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("wallet_balance")
+        .eq("id", user.id)
+        .single();
+
+      setWalletBalance(profile?.wallet_balance || 0);
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -63,7 +98,7 @@ export function Navbar() {
             {user ? (
               <>
                 <Badge variant="secondary" className="hidden sm:inline-flex">
-                  Balance: $0.00
+                  Balance: ${walletBalance.toFixed(2)}
                 </Badge>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -27,6 +27,9 @@ function WalletPage() {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalDeposited, setTotalDeposited] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
+  const [transactionCount, setTransactionCount] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,6 +40,17 @@ function WalletPage() {
     if (user) {
       fetchWalletData();
     }
+
+    // Listen for wallet updates from other pages
+    const handleWalletUpdate = () => {
+      fetchWalletData();
+    };
+
+    window.addEventListener("walletUpdated", handleWalletUpdate);
+
+    return () => {
+      window.removeEventListener("walletUpdated", handleWalletUpdate);
+    };
   }, [user, authLoading, router]);
 
   const fetchWalletData = async () => {
@@ -60,6 +74,23 @@ function WalletPage() {
         .limit(20);
 
       setTransactions((userTransactions as any) || []);
+
+      // Calculate statistics from transactions
+      const userTransactionsArray = (userTransactions as any) || [];
+      const deposited = userTransactionsArray
+        .filter((t: any) => t.type === "deposit" && t.amount > 0)
+        .reduce((sum: number, t: any) => sum + t.amount, 0);
+
+      const spent = userTransactionsArray
+        .filter(
+          (t: any) =>
+            t.type === "purchase" || (t.type === "withdrawal" && t.amount < 0)
+        )
+        .reduce((sum: number, t: any) => sum + Math.abs(t.amount), 0);
+
+      setTotalDeposited(deposited);
+      setTotalSpent(spent);
+      setTransactionCount(userTransactionsArray.length);
     } catch (error) {
       console.error("Error fetching wallet data:", error);
     } finally {
@@ -69,29 +100,12 @@ function WalletPage() {
 
   const handleDeposit = async (amount: number) => {
     try {
-      // Create transaction record
-      const { error } = await supabase.from("transactions").insert({
-        user_id: user?.id,
-        type: "deposit",
-        amount: amount,
-        description: "Wallet deposit",
-        status: "completed",
-      });
-
-      if (error) throw error;
-
-      // Update wallet balance
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ wallet_balance: balance + amount })
-        .eq("id", user?.id);
-
-      if (updateError) throw updateError;
-
-      setBalance(balance + amount);
+      console.log("handleDeposit called with amount:", amount);
+      // Just refresh the wallet data since PaystackFunding already handles the database operations
       await fetchWalletData();
+      console.log("Wallet data refreshed");
     } catch (error) {
-      console.error("Error depositing funds:", error);
+      console.error("Error refreshing wallet data:", error);
       throw error;
     }
   };
@@ -198,7 +212,15 @@ function WalletPage() {
               <h1 className="text-2xl md:text-3xl font-bold">Wallet</h1>
             </div>
 
-            <WalletCard balance={balance} onDeposit={handleDeposit} />
+            <WalletCard
+              balance={balance}
+              onDeposit={handleDeposit}
+              userEmail={user?.email}
+              userId={user?.id}
+              totalDeposited={totalDeposited}
+              totalSpent={totalSpent}
+              transactionCount={transactionCount}
+            />
 
             <Card>
               <CardHeader>

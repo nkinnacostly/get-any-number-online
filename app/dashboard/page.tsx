@@ -32,6 +32,7 @@ function DashboardPage() {
   const [myNumbers, setMyNumbers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -42,6 +43,17 @@ function DashboardPage() {
 
     if (user) {
       fetchUserData();
+
+      // Listen for wallet updates
+      const handleWalletUpdate = () => {
+        fetchUserData();
+      };
+
+      window.addEventListener("walletUpdated", handleWalletUpdate);
+
+      return () => {
+        window.removeEventListener("walletUpdated", handleWalletUpdate);
+      };
     }
   }, [user, authLoading, router]);
 
@@ -49,6 +61,15 @@ function DashboardPage() {
     try {
       setLoading(true);
       setError("");
+
+      // Fetch wallet balance
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("wallet_balance")
+        .eq("id", user?.id)
+        .single();
+
+      setWalletBalance(profile?.wallet_balance || 0);
 
       // Fetch user's purchased numbers
       const { data: numbers } = await supabase
@@ -214,7 +235,7 @@ function DashboardPage() {
     totalNumbers: myNumbers.length,
     activeNumbers: myNumbers.filter((n: any) => n.status === "active").length,
     totalMessages: messages.length,
-    walletBalance: 0, // TODO: Implement wallet balance
+    walletBalance: walletBalance,
   };
 
   return (

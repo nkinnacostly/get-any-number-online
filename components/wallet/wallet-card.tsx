@@ -16,13 +16,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet, Plus, CreditCard, History } from "lucide-react";
+import { PaystackFunding } from "./paystack-funding";
 
 interface WalletCardProps {
   balance: number;
   onDeposit: (amount: number) => Promise<void>;
+  userEmail?: string;
+  userId?: string;
+  totalDeposited?: number;
+  totalSpent?: number;
+  transactionCount?: number;
 }
 
-export function WalletCard({ balance, onDeposit }: WalletCardProps) {
+export function WalletCard({
+  balance,
+  onDeposit,
+  userEmail,
+  userId,
+  totalDeposited = 0,
+  totalSpent = 0,
+  transactionCount = 0,
+}: WalletCardProps) {
   const [depositAmount, setDepositAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -100,40 +114,48 @@ export function WalletCard({ balance, onDeposit }: WalletCardProps) {
                     Add Funds
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Add Funds</DialogTitle>
+                    <DialogTitle>Fund Your Wallet</DialogTitle>
                     <DialogDescription>
-                      Add money to your wallet to purchase SMS numbers
+                      Add money to your wallet using secure payment methods
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="deposit-amount">Amount</Label>
-                      <Input
-                        id="deposit-amount"
-                        type="number"
-                        placeholder="0.00"
-                        value={depositAmount}
-                        onChange={(e) => setDepositAmount(e.target.value)}
-                        min="0.01"
-                        step="0.01"
-                      />
+                  {userEmail && userId ? (
+                    <PaystackFunding
+                      userEmail={userEmail}
+                      userId={userId}
+                      onSuccess={onDeposit}
+                    />
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="deposit-amount">Amount</Label>
+                        <Input
+                          id="deposit-amount"
+                          type="number"
+                          placeholder="0.00"
+                          value={depositAmount}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          min="0.01"
+                          step="0.01"
+                        />
+                      </div>
+                      {error && (
+                        <Alert variant="destructive">
+                          <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                      )}
+                      <Button
+                        onClick={handleDeposit}
+                        disabled={loading}
+                        className="w-full"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        {loading ? "Processing..." : "Add Funds"}
+                      </Button>
                     </div>
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-                    <Button
-                      onClick={handleDeposit}
-                      disabled={loading}
-                      className="w-full"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      {loading ? "Processing..." : "Add Funds"}
-                    </Button>
-                  </div>
+                  )}
                 </DialogContent>
               </Dialog>
             </div>
@@ -150,10 +172,12 @@ export function WalletCard({ balance, onDeposit }: WalletCardProps) {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Deposited
                 </p>
-                <p className="text-2xl font-bold text-foreground">$0.00</p>
+                <p className="text-2xl font-bold text-foreground">
+                  ${totalDeposited.toFixed(2)}
+                </p>
                 <div className="flex items-center text-green-600 text-xs">
                   <Plus className="h-3 w-3 mr-1" />
-                  <span>+$0.00 this month</span>
+                  <span>+${totalDeposited.toFixed(2)} total</span>
                 </div>
               </div>
               <div className="p-3 bg-green-500/10 rounded-xl group-hover:bg-green-500/20 transition-colors">
@@ -170,10 +194,12 @@ export function WalletCard({ balance, onDeposit }: WalletCardProps) {
                 <p className="text-sm font-medium text-muted-foreground">
                   Total Spent
                 </p>
-                <p className="text-2xl font-bold text-foreground">$0.00</p>
+                <p className="text-2xl font-bold text-foreground">
+                  ${totalSpent.toFixed(2)}
+                </p>
                 <div className="flex items-center text-red-600 text-xs">
                   <CreditCard className="h-3 w-3 mr-1" />
-                  <span>$0.00 this month</span>
+                  <span>${totalSpent.toFixed(2)} total</span>
                 </div>
               </div>
               <div className="p-3 bg-red-500/10 rounded-xl group-hover:bg-red-500/20 transition-colors">
@@ -190,7 +216,9 @@ export function WalletCard({ balance, onDeposit }: WalletCardProps) {
                 <p className="text-sm font-medium text-muted-foreground">
                   Transactions
                 </p>
-                <p className="text-2xl font-bold text-foreground">0</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {transactionCount}
+                </p>
                 <div className="flex items-center text-primary text-xs">
                   <History className="h-3 w-3 mr-1" />
                   <span>All time</span>

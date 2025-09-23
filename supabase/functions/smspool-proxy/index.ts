@@ -96,6 +96,7 @@ serve(async (req: Request) => {
       body: params,
     });
     const json = await res.json();
+    console.log("SMS Pool API response:", JSON.stringify(json, null, 2));
 
     // Calculate expiry date (typically 10 minutes for SMS numbers)
     const expiryDate = new Date();
@@ -109,23 +110,93 @@ serve(async (req: Request) => {
         country_code: body.country,
         service_name: body.service_name || `Service ${body.service}`,
         smspool_number_id: json?.orderid || json?.order || json?.id || "",
-        cost: json?.price || 0,
+        cost: body.max_price || 0, // Store the marked-up price the user paid
         status: json?.status === 1 ? "active" : "expired",
         expiry_date: expiryDate,
       },
     ]);
 
-    // 2) create transaction record for wallet deduction
+    // 2) Check user wallet balance before deduction
+    console.log("Checking wallet balance for user:", body.user_id);
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("wallet_balance")
+      .eq("id", body.user_id)
+      .single();
+
+    if (profileError) {
+      console.error("Profile error:", profileError);
+      return new Response(JSON.stringify({ error: "User profile not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const currentBalance = profile.wallet_balance || 0;
+    // Use max_price from request (this is the marked-up price the user agreed to pay)
+    // SMS Pool price is the raw cost, but we charge users the marked-up price
+    const purchasePrice = body.max_price || 0;
+    console.log(
+      `Current balance: ${currentBalance}, Purchase price: ${purchasePrice}`
+    );
+    console.log(
+      `SMS Pool raw price: ${json?.price}, User charged price: ${body.max_price}`
+    );
+
+    if (currentBalance < purchasePrice) {
+      console.log("Insufficient balance");
+      return new Response(
+        JSON.stringify({ error: "Insufficient wallet balance" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // 3) Update wallet balance
+    const newBalance = currentBalance - purchasePrice;
+    console.log(
+      `Updating wallet balance from ${currentBalance} to ${newBalance}`
+    );
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ wallet_balance: newBalance })
+      .eq("id", body.user_id);
+
+    if (updateError) {
+      console.error("Wallet update error:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Failed to update wallet balance" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    console.log("Wallet balance updated successfully");
+
+    // 4) create transaction record for wallet deduction
+    console.log("Creating transaction record...");
     const transactionRes = await supabase.from("transactions").insert([
       {
         user_id: body.user_id,
         type: "purchase",
-        amount: -(json?.price || 0), // negative for deduction
+        amount: -purchasePrice, // negative for deduction
         description: `SMS number purchase - ${body.country}`,
-        reference_id: insertRes.data?.[0]?.id,
-        status: json?.status === 1 ? "completed" : "pending",
+        status: "completed", // Always completed if we reach this point
       },
     ]);
+
+    if (transactionRes.error) {
+      console.error("Transaction creation error:", transactionRes.error);
+      // Rollback wallet balance if transaction creation fails
+      console.log("Rolling back wallet balance...");
+      await supabase
+        .from("profiles")
+        .update({ wallet_balance: currentBalance })
+        .eq("id", body.user_id);
+
+      return new Response(
+        JSON.stringify({ error: "Failed to record transaction" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    console.log("Transaction created successfully");
 
     return new Response(
       JSON.stringify({

@@ -132,6 +132,8 @@ export class SMSPoolService {
         ...options,
       };
 
+      console.log("Sending purchase request:", requestBody);
+
       const response = await fetch("/api/smspool-proxy/order", {
         method: "POST",
         headers: {
@@ -141,10 +143,14 @@ export class SMSPoolService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage =
+          errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      console.log("SMS Pool API response:", data);
 
       if (data.error) {
         return {

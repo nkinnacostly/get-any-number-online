@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,8 @@ import {
   Menu,
 } from "lucide-react";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
 
 const navigation = [
   {
@@ -71,6 +74,41 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { unreadCount, loading } = useUnreadMessages();
+  const { user } = useAuth();
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchWalletBalance();
+
+      // Listen for wallet updates
+      const handleWalletUpdate = () => {
+        fetchWalletBalance();
+      };
+
+      window.addEventListener("walletUpdated", handleWalletUpdate);
+
+      return () => {
+        window.removeEventListener("walletUpdated", handleWalletUpdate);
+      };
+    }
+  }, [user]);
+
+  const fetchWalletBalance = async () => {
+    if (!user) return;
+
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("wallet_balance")
+        .eq("id", user.id)
+        .single();
+
+      setWalletBalance(profile?.wallet_balance || 0);
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+    }
+  };
 
   const SidebarContent = () => (
     <div className={cn("h-full flex flex-col", className)}>
@@ -125,7 +163,7 @@ export function Sidebar({
                     variant="outline"
                     className="transition-all duration-200 hover:scale-105 hover:shadow-sm"
                   >
-                    $0.00
+                    ${walletBalance.toFixed(2)}
                   </Badge>
                 </div>
               </div>

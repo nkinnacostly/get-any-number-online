@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { SMSPoolService } from "@/services/sms-pool-api";
 import { Clock, DollarSign } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
 
 interface Service {
   id: string;
@@ -32,7 +33,7 @@ interface Country {
 }
 
 interface PurchaseFlowProps {
-  onPurchaseComplete: () => void;
+  onPurchaseComplete: (purchaseData?: any) => void;
 }
 
 type Step = "service" | "country" | "confirmation";
@@ -460,6 +461,7 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
     useState<PricingOption | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     fetchServices();
@@ -666,6 +668,36 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
     }
 
     try {
+      // Check wallet balance before attempting purchase
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("wallet_balance")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError) {
+        throw new Error("Unable to verify wallet balance");
+      }
+
+      const currentBalance = profile.wallet_balance || 0;
+      const purchasePrice = pricingOption.price;
+
+      if (currentBalance < purchasePrice) {
+        setError(
+          `Insufficient wallet balance. You have ₦${currentBalance.toLocaleString(
+            "en-NG",
+            {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 2,
+            }
+          )} but need ₦${purchasePrice.toLocaleString("en-NG", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+          })}. Please fund your wallet first.`
+        );
+        return;
+      }
+
       const smsService = new SMSPoolService(""); // No API key needed since we're using proxy
 
       const result = await smsService.purchaseNumber(
@@ -679,24 +711,63 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         }
       );
 
+      console.log("Purchase result:", result);
+
       if (result.success && result.data) {
         // Handle successful purchase
-        onPurchaseComplete();
-        // Reset the flow
-        setCurrentStep("service");
-        setSelectedService(null);
-        setSelectedCountry(null);
-        setSelectedPricingOption(null);
+        setSuccess(true);
+        onPurchaseComplete(result.data);
+        // Reset the flow after a delay
+        setTimeout(() => {
+          setCurrentStep("service");
+          setSelectedService(null);
+          setSelectedCountry(null);
+          setSelectedPricingOption(null);
+          setSuccess(false);
+        }, 2000);
       } else {
-        throw new Error(result.error || "Failed to purchase number");
+        // Handle specific error cases
+        if (result.error?.includes("Insufficient wallet balance")) {
+          setError(
+            "Insufficient wallet balance. Please fund your wallet first."
+          );
+        } else if (result.error?.includes("User profile not found")) {
+          setError("Account error. Please try logging out and back in.");
+        } else {
+          setError(
+            result.error || "Failed to purchase number. Please try again."
+          );
+        }
       }
     } catch (error) {
       console.error("Error purchasing number:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to purchase number"
-      );
+      if (
+        error instanceof Error &&
+        error.message.includes("Insufficient wallet balance")
+      ) {
+        setError(error.message);
+      } else {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Failed to purchase number. Please try again."
+        );
+      }
     }
   };
+
+  if (success) {
+    return (
+      <div className="max-w-md mx-auto space-y-4">
+        <Alert className="border-green-200 bg-green-50">
+          <AlertDescription className="text-green-800">
+            ✅ Purchase successful! Your SMS number has been purchased and added
+            to your account.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -704,9 +775,20 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-        <Button onClick={fetchServices} className="w-full">
-          Retry
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={fetchServices} className="flex-1">
+            Retry
+          </Button>
+          {error.includes("Insufficient wallet balance") && (
+            <Button
+              onClick={() => (window.location.href = "/wallet")}
+              variant="outline"
+              className="flex-1"
+            >
+              Fund Wallet
+            </Button>
+          )}
+        </div>
       </div>
     );
   }

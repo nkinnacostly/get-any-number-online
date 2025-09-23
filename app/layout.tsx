@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Get Any Number Online Platform",
   description: "Purchase virtual phone numbers for SMS verification",
+  other: {
+    cryptomus: "1f5ae0d7",
+  },
 };
 
 export default function RootLayout({

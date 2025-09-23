@@ -17,6 +17,8 @@ import { Phone, RefreshCw } from "lucide-react";
 function NumbersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [purchasedNumber, setPurchasedNumber] = useState<any>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -25,9 +27,19 @@ function NumbersPage() {
     }
   }, [user, authLoading, router]);
 
-  const handlePurchaseComplete = () => {
-    // Optionally refresh data or show success message
-    console.log("Purchase completed successfully!");
+  const handlePurchaseComplete = async (purchaseData?: any) => {
+    console.log("Purchase completed successfully!", purchaseData);
+    setPurchasedNumber(purchaseData);
+    setShowSuccess(true);
+
+    // Trigger a custom event to refresh wallet data in other components
+    window.dispatchEvent(new CustomEvent("walletUpdated"));
+
+    // Hide success message after 5 seconds
+    setTimeout(() => {
+      setShowSuccess(false);
+      setPurchasedNumber(null);
+    }, 5000);
   };
 
   if (authLoading) {
@@ -82,6 +94,32 @@ function NumbersPage() {
                 for SMS verification
               </p>
             </div>
+
+            {showSuccess && (
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-green-800">
+                        Purchase Successful!
+                      </h3>
+                      <p className="text-green-700">
+                        Your SMS number has been purchased and added to your
+                        account.
+                        {purchasedNumber?.number && (
+                          <span className="block mt-1 font-mono text-sm">
+                            Number: {purchasedNumber.number}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <PurchaseFlow onPurchaseComplete={handlePurchaseComplete} />
           </div>
