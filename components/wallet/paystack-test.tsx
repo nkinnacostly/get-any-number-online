@@ -11,11 +11,23 @@ export function PaystackTest() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
 
+  const onSuccess = (reference: any) => {
+    setResult({ success: true, reference });
+    setError("");
+  };
+
+  const onClose = () => {
+    setError("Payment was closed");
+    setResult(null);
+  };
+
   const config = {
     reference: `test_${Date.now()}`,
     email: "test@example.com",
     amount: 100, // 1 USD in kobo
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLICK_KEY || "",
+    onSuccess,
+    onClose,
     metadata: {
       custom_fields: [
         {
@@ -29,20 +41,10 @@ export function PaystackTest() {
 
   const initializePayment = usePaystackPayment(config);
 
-  const onSuccess = (reference: any) => {
-    setResult({ success: true, reference });
-    setError("");
-  };
-
-  const onClose = () => {
-    setError("Payment was closed");
-    setResult(null);
-  };
-
   const handleTestPayment = () => {
     setError("");
     setResult(null);
-    initializePayment(onSuccess, onClose);
+    initializePayment({ onSuccess, onClose });
   };
 
   return (
