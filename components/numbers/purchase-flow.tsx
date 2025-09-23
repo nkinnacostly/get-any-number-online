@@ -781,7 +781,11 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
           </Button>
           {error.includes("Insufficient wallet balance") && (
             <Button
-              onClick={() => (window.location.href = "/wallet")}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = "/wallet";
+                }
+              }}
               variant="outline"
               className="flex-1"
             >

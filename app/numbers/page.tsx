@@ -33,7 +33,9 @@ function NumbersPage() {
     setShowSuccess(true);
 
     // Trigger a custom event to refresh wallet data in other components
-    window.dispatchEvent(new CustomEvent("walletUpdated"));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("walletUpdated"));
+    }
 
     // Hide success message after 5 seconds
     setTimeout(() => {
