@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "Get Any Number Online Platform",
   description: "Purchase virtual phone numbers for SMS verification",
   other: {
-    cryptomus: "1f5ae0d7",
+    cryptomus: "be06a9a8",
   },
 };
 
