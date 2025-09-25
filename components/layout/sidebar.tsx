@@ -22,6 +22,7 @@ import {
   BarChart3,
   CreditCard,
   Menu,
+  Mail,
 } from "lucide-react";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { useAuth } from "@/hooks/useAuth";

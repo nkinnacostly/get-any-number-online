@@ -149,6 +149,13 @@ export function Navbar() {
               <div className="hidden sm:flex items-center space-x-3">
                 <Button
                   variant="ghost"
+                  onClick={() => router.push("/contact")}
+                  className="hover:text-foreground"
+                >
+                  Contact
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => router.push("/login")}
                   className="hover:text-foreground"
                 >
@@ -190,6 +197,16 @@ export function Navbar() {
               {!user && (
                 <>
                   <div className=" space-y-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        router.push("/contact");
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full hover:bg-muted"
+                    >
+                      Contact
+                    </Button>
                     <Button
                       // variant="ghost"
                       onClick={() => {
