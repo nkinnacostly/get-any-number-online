@@ -138,7 +138,7 @@ export default function ContactPage() {
                                 Email
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                support@getanynumber.com
+                                ayangcostly@gmail.com
                               </p>
                             </div>
                           </div>
@@ -149,7 +149,7 @@ export default function ContactPage() {
                                 Phone
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                +1 (555) 123-4567
+                                +234 8071177214
                               </p>
                             </div>
                           </div>
@@ -160,9 +160,9 @@ export default function ContactPage() {
                                 Address
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                123 Business Street
+                                Nigeria
                                 <br />
-                                Tech City, TC 12345
+                                Lagos, Nigeria
                               </p>
                             </div>
                           </div>
@@ -206,7 +206,7 @@ export default function ContactPage() {
                           <div className="flex justify-between">
                             <span className="text-foreground">Sunday</span>
                             <span className="text-muted-foreground">
-                              Closed
+                              10:00 AM - 4:00 PM
                             </span>
                           </div>
                         </div>
