@@ -127,7 +127,7 @@ async function sendEmailNotification({
       to: ["ayangcostly@gmail.com"],
       subject: `New Contact Form Submission from ${name}`,
       html: emailContent,
-      reply_to: email,
+      replyTo: email,
     });
 
     console.log("Email sent successfully:", result);
