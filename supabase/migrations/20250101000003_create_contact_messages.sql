@@ -19,10 +19,12 @@ ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 
 -- Create policy to allow authenticated users to read their own messages
 -- (This is optional, you might want to restrict this to admin users only)
+DROP POLICY IF EXISTS "Allow authenticated users to read contact messages" ON contact_messages;
 CREATE POLICY "Allow authenticated users to read contact messages" ON contact_messages
   FOR SELECT USING (auth.role() = 'authenticated');
 
 -- Create policy to allow anyone to insert contact messages
+DROP POLICY IF EXISTS "Allow anyone to insert contact messages" ON contact_messages;
 CREATE POLICY "Allow anyone to insert contact messages" ON contact_messages
   FOR INSERT WITH CHECK (true);
 
@@ -36,6 +38,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger to automatically update updated_at
+DROP TRIGGER IF EXISTS update_contact_messages_updated_at ON contact_messages;
 CREATE TRIGGER update_contact_messages_updated_at
   BEFORE UPDATE ON contact_messages
   FOR EACH ROW

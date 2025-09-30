@@ -15,8 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet, Plus, CreditCard, History } from "lucide-react";
-import { PaystackFunding } from "./paystack-funding";
+import { Wallet, Plus, CreditCard, History, Coins } from "lucide-react";
+import { CryptomusFunding } from "./cryptomus-funding";
 
 interface WalletCardProps {
   balance: number;
@@ -114,19 +114,27 @@ export function WalletCard({
                     Add Funds
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Fund Your Wallet</DialogTitle>
                     <DialogDescription>
-                      Add money to your wallet using secure payment methods
+                      Add money to your wallet using cryptocurrency payments
                     </DialogDescription>
                   </DialogHeader>
                   {userEmail && userId ? (
-                    <PaystackFunding
-                      userEmail={userEmail}
-                      userId={userId}
-                      onSuccess={onDeposit}
-                    />
+                    <div className="w-full">
+                      <div className="flex items-center justify-center space-x-2 mb-4 p-3 bg-primary/10 rounded-lg">
+                        <Coins className="h-5 w-5 text-primary" />
+                        <span className="text-sm font-medium text-primary">
+                          Cryptocurrency Funding Only
+                        </span>
+                      </div>
+                      <CryptomusFunding
+                        userEmail={userEmail}
+                        userId={userId}
+                        onSuccess={onDeposit}
+                      />
+                    </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="space-y-2">
@@ -151,7 +159,7 @@ export function WalletCard({
                         disabled={loading}
                         className="w-full"
                       >
-                        <CreditCard className="h-4 w-4 mr-2" />
+                        <Coins className="h-4 w-4 mr-2" />
                         {loading ? "Processing..." : "Add Funds"}
                       </Button>
                     </div>

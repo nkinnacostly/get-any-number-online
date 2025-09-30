@@ -530,7 +530,7 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
               // Create pricing options with 50% markup
               pricingOptions = countryPricing.map((pricing: any) => {
                 const originalPrice = parseFloat(pricing.price);
-                const markedUpPrice = originalPrice * 1.5; // Add 50% markup
+                const markedUpPrice = originalPrice * 1.5; // Always apply 50% markup
 
                 return {
                   pool: pricing.pool,
@@ -549,7 +549,7 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
               pricingOptions = [
                 {
                   pool: 1, // Default pool
-                  price: fallbackPrice * 1.5, // Add 50% markup to fallback
+                  price: fallbackPrice * 1.5, // Always apply 50% markup to fallback
                   originalPrice: fallbackPrice,
                 },
               ];
@@ -606,7 +606,7 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         const pricingOptions: PricingOption[] = pricingResult.data.map(
           (pricing: any) => {
             const originalPrice = parseFloat(pricing.price);
-            const markedUpPrice = originalPrice * 1.5; // Add 50% markup
+            const markedUpPrice = originalPrice * 1.5; // Always apply 50% markup
 
             return {
               pool: pricing.pool,
@@ -667,6 +667,9 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
       return;
     }
 
+    setLoading(true);
+    setError("");
+
     try {
       // Check wallet balance before attempting purchase
       const { data: profile, error: profileError } = await supabase
@@ -684,14 +687,14 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
 
       if (currentBalance < purchasePrice) {
         setError(
-          `Insufficient wallet balance. You have ₦${currentBalance.toLocaleString(
-            "en-NG",
+          `Insufficient wallet balance. You have $${currentBalance.toLocaleString(
+            "en-US",
             {
-              minimumFractionDigits: 0,
+              minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }
-          )} but need ₦${purchasePrice.toLocaleString("en-NG", {
-            minimumFractionDigits: 0,
+          )} but need $${purchasePrice.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}. Please fund your wallet first.`
         );
@@ -700,16 +703,35 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
 
       const smsService = new SMSPoolService(""); // No API key needed since we're using proxy
 
-      const result = await smsService.purchaseNumber(
-        selectedService.id,
-        selectedCountry.id,
-        {
-          pool: pricingOption.pool.toString(),
-          max_price: pricingOption.price, // Use the selected price as max
-          user_id: user.id,
-          service_name: selectedService.name,
+      // Retry logic for API calls
+      let result;
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount < maxRetries) {
+        try {
+          result = await smsService.purchaseNumber(
+            selectedService.id,
+            selectedCountry.id,
+            {
+              pool: pricingOption.pool.toString(),
+              max_price: pricingOption.price, // Use the selected price as max
+              user_id: user.id,
+              service_name: selectedService.name,
+            }
+          );
+          break; // Success, exit retry loop
+        } catch (apiError) {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            throw apiError;
+          }
+          // Wait before retry (exponential backoff)
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * retryCount)
+          );
         }
-      );
+      }
 
       console.log("Purchase result:", result);
 
@@ -733,6 +755,13 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
           );
         } else if (result.error?.includes("User profile not found")) {
           setError("Account error. Please try logging out and back in.");
+        } else if (
+          result.error?.includes("Network error") ||
+          result.error?.includes("timeout")
+        ) {
+          setError(
+            "Network error. Please check your connection and try again."
+          );
         } else {
           setError(
             result.error || "Failed to purchase number. Please try again."
@@ -746,6 +775,8 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         error.message.includes("Insufficient wallet balance")
       ) {
         setError(error.message);
+      } else if (error instanceof Error && error.message.includes("Network")) {
+        setError("Network error. Please check your connection and try again.");
       } else {
         setError(
           error instanceof Error
@@ -753,6 +784,8 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
             : "Failed to purchase number. Please try again."
         );
       }
+    } finally {
+      setLoading(false);
     }
   };
 

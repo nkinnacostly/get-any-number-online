@@ -102,21 +102,7 @@ serve(async (req: Request) => {
     const expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + 10);
 
-    // 1) store purchased number in Supabase
-    const insertRes = await supabase.from("purchased_numbers").insert([
-      {
-        user_id: body.user_id,
-        phone_number: json?.number || json?.phone || "",
-        country_code: body.country,
-        service_name: body.service_name || `Service ${body.service}`,
-        smspool_number_id: json?.orderid || json?.order || json?.id || "",
-        cost: body.max_price || 0, // Store the marked-up price the user paid
-        status: json?.status === 1 ? "active" : "expired",
-        expiry_date: expiryDate,
-      },
-    ]);
-
-    // 2) Check user wallet balance before deduction
+    // 1) Check user wallet balance before any operations
     console.log("Checking wallet balance for user:", body.user_id);
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -151,58 +137,35 @@ serve(async (req: Request) => {
       );
     }
 
-    // 3) Update wallet balance
-    const newBalance = currentBalance - purchasePrice;
-    console.log(
-      `Updating wallet balance from ${currentBalance} to ${newBalance}`
-    );
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ wallet_balance: newBalance })
-      .eq("id", body.user_id);
+    // 2) Use database transaction for atomic operations
+    console.log("Starting database transaction...");
+    const { data: transactionData, error: transactionError } =
+      await supabase.rpc("purchase_number_transaction", {
+        p_user_id: body.user_id,
+        p_phone_number: json?.number || json?.phone || "",
+        p_country_code: body.country,
+        p_service_name: body.service_name || `Service ${body.service}`,
+        p_smspool_number_id: json?.orderid || json?.order || json?.id || "",
+        p_cost: purchasePrice,
+        p_status: json?.status === 1 ? "active" : "expired",
+        p_expiry_date: expiryDate.toISOString(),
+        p_purchase_amount: -purchasePrice, // negative for deduction
+        p_description: `SMS number purchase - ${body.country}`,
+      });
 
-    if (updateError) {
-      console.error("Wallet update error:", updateError);
+    if (transactionError) {
+      console.error("Transaction error:", transactionError);
       return new Response(
-        JSON.stringify({ error: "Failed to update wallet balance" }),
+        JSON.stringify({ error: "Failed to complete purchase transaction" }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
-    console.log("Wallet balance updated successfully");
-
-    // 4) create transaction record for wallet deduction
-    console.log("Creating transaction record...");
-    const transactionRes = await supabase.from("transactions").insert([
-      {
-        user_id: body.user_id,
-        type: "purchase",
-        amount: -purchasePrice, // negative for deduction
-        description: `SMS number purchase - ${body.country}`,
-        status: "completed", // Always completed if we reach this point
-      },
-    ]);
-
-    if (transactionRes.error) {
-      console.error("Transaction creation error:", transactionRes.error);
-      // Rollback wallet balance if transaction creation fails
-      console.log("Rolling back wallet balance...");
-      await supabase
-        .from("profiles")
-        .update({ wallet_balance: currentBalance })
-        .eq("id", body.user_id);
-
-      return new Response(
-        JSON.stringify({ error: "Failed to record transaction" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    console.log("Transaction created successfully");
+    console.log("Database transaction completed successfully");
 
     return new Response(
       JSON.stringify({
         remote: json,
-        purchased_number: insertRes,
-        transaction: transactionRes,
+        transaction: transactionData,
       }),
       {
         headers: { "content-type": "application/json" },
