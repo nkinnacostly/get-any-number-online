@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       subtract: 0,
       accuracy_payment_percent: 0,
       additional_data,
-      currencies: [{ currency: currency }],
+      currencies: [{ currency: currency, network: network || "" }],
       customer_email,
     };
 

@@ -735,7 +735,7 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
 
       console.log("Purchase result:", result);
 
-      if (result.success && result.data) {
+      if (result && result.success && result.data) {
         // Handle successful purchase
         setSuccess(true);
         onPurchaseComplete(result.data);
@@ -749,22 +749,22 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         }, 2000);
       } else {
         // Handle specific error cases
-        if (result.error?.includes("Insufficient wallet balance")) {
+        if (result?.error?.includes("Insufficient wallet balance")) {
           setError(
             "Insufficient wallet balance. Please fund your wallet first."
           );
-        } else if (result.error?.includes("User profile not found")) {
+        } else if (result?.error?.includes("User profile not found")) {
           setError("Account error. Please try logging out and back in.");
         } else if (
-          result.error?.includes("Network error") ||
-          result.error?.includes("timeout")
+          result?.error?.includes("Network error") ||
+          result?.error?.includes("timeout")
         ) {
           setError(
             "Network error. Please check your connection and try again."
           );
         } else {
           setError(
-            result.error || "Failed to purchase number. Please try again."
+            result?.error || "Failed to purchase number. Please try again."
           );
         }
       }
