@@ -30,13 +30,17 @@ interface Message {
 interface MessagesListProps {
   messages: Message[];
   onRefresh: () => void;
+  onCheckMessages?: () => void;
   loading?: boolean;
+  checkingMessages?: boolean;
 }
 
 export function MessagesList({
   messages,
   onRefresh,
+  onCheckMessages,
   loading = false,
+  checkingMessages = false,
 }: MessagesListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedNumber, setSelectedNumber] = useState("");
@@ -70,12 +74,28 @@ export function MessagesList({
             <Badge variant="destructive">{unreadCount} unread</Badge>
           )}
         </div>
-        <Button onClick={onRefresh} disabled={loading} variant="outline">
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </Button>
+        <div className="flex space-x-2">
+          {onCheckMessages && (
+            <Button
+              onClick={onCheckMessages}
+              disabled={checkingMessages}
+              variant="outline"
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${
+                  checkingMessages ? "animate-spin" : ""
+                }`}
+              />
+              Check Messages
+            </Button>
+          )}
+          <Button onClick={onRefresh} disabled={loading} variant="outline">
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filter */}

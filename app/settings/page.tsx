@@ -160,14 +160,14 @@ export default function SettingsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex">
-        {/* Fixed Sidebar - 300px width, full height */}
-        <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+      <div className="min-h-screen bg-background">
+        {/* Desktop Sidebar - Hidden on mobile */}
+        <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
           <Sidebar className="h-full" />
         </div>
 
-        {/* Main Content Area - takes remaining width */}
-        <div className="flex-1 ml-[300px]">
+        {/* Main Content Area */}
+        <div className="lg:ml-[300px]">
           <Navbar />
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
@@ -185,28 +185,36 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Fixed Sidebar - 300px width, full height */}
-      <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+    <div className="min-h-screen bg-background">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
         <Sidebar className="h-full" />
       </div>
 
-      {/* Main Content Area - takes remaining width */}
-      <div className="flex-1 ml-[300px]">
+      {/* Main Content Area */}
+      <div className="lg:ml-[300px] transition-all duration-300 ease-in-out">
         <Navbar />
-        <main className="p-6">
+        <main className="p-4 md:p-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
               <div className="flex items-center space-x-2">
-                <Settings className="h-6 w-6" />
-                <h1 className="text-3xl font-bold">Settings</h1>
+                <Settings className="h-5 w-5 md:h-6 md:w-6" />
+                <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
               </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" onClick={handleReset}>
+              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={handleReset}
+                  className="w-full sm:w-auto"
+                >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Reset
                 </Button>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full sm:w-auto"
+                >
                   <Save className="h-4 w-4 mr-2" />
                   {saving ? "Saving..." : "Save Changes"}
                 </Button>
@@ -235,7 +243,7 @@ export default function SettingsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <div className="space-y-0.5">
                       <Label>Email Notifications</Label>
                       <p className="text-sm text-muted-foreground">
@@ -253,7 +261,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <div className="space-y-0.5">
                       <Label>SMS Notifications</Label>
                       <p className="text-sm text-muted-foreground">
@@ -268,7 +276,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <div className="space-y-0.5">
                       <Label>Marketing Emails</Label>
                       <p className="text-sm text-muted-foreground">
@@ -294,7 +302,7 @@ export default function SettingsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <div className="space-y-0.5">
                       <Label>Two-Factor Authentication</Label>
                       <p className="text-sm text-muted-foreground">
@@ -309,7 +317,7 @@ export default function SettingsPage() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <div className="space-y-0.5">
                       <Label>Auto-Renewal</Label>
                       <p className="text-sm text-muted-foreground">
@@ -486,7 +494,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                       <div className="space-y-0.5">
                         <Label className="text-red-600">Delete Account</Label>
                         <p className="text-sm text-muted-foreground">
@@ -494,7 +502,10 @@ export default function SettingsPage() {
                           data
                         </p>
                       </div>
-                      <Button variant="destructive">
+                      <Button
+                        variant="destructive"
+                        className="w-full sm:w-auto"
+                      >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete Account
                       </Button>

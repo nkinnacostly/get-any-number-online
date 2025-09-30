@@ -132,14 +132,14 @@ export default function ProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background flex">
-        {/* Fixed Sidebar - 300px width, full height */}
-        <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+      <div className="min-h-screen bg-background">
+        {/* Desktop Sidebar - Hidden on mobile */}
+        <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
           <Sidebar className="h-full" />
         </div>
 
-        {/* Main Content Area - takes remaining width */}
-        <div className="flex-1 ml-[300px]">
+        {/* Main Content Area */}
+        <div className="lg:ml-[300px]">
           <Navbar />
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
@@ -166,24 +166,27 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Fixed Sidebar - 300px width, full height */}
-      <div className="fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
+    <div className="min-h-screen bg-background">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="hidden lg:block fixed left-0 top-0 h-screen w-[300px] bg-background border-r border-border z-10">
         <Sidebar className="h-full" />
       </div>
 
-      {/* Main Content Area - takes remaining width */}
-      <div className="flex-1 ml-[300px]">
+      {/* Main Content Area */}
+      <div className="lg:ml-[300px] transition-all duration-300 ease-in-out">
         <Navbar />
-        <main className="p-6">
+        <main className="p-4 md:p-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
               <div className="flex items-center space-x-2">
-                <User className="h-6 w-6" />
-                <h1 className="text-3xl font-bold">Profile</h1>
+                <User className="h-5 w-5 md:h-6 md:w-6" />
+                <h1 className="text-2xl md:text-3xl font-bold">Profile</h1>
               </div>
               {!editing && (
-                <Button onClick={() => setEditing(true)}>
+                <Button
+                  onClick={() => setEditing(true)}
+                  className="w-full md:w-auto"
+                >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Profile
                 </Button>
@@ -360,12 +363,19 @@ export default function ProfilePage() {
                     </div>
 
                     {editing && (
-                      <div className="flex space-x-2 pt-4">
-                        <Button onClick={handleSave}>
+                      <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 pt-4">
+                        <Button
+                          onClick={handleSave}
+                          className="w-full sm:w-auto"
+                        >
                           <Save className="h-4 w-4 mr-2" />
                           Save Changes
                         </Button>
-                        <Button variant="outline" onClick={handleCancel}>
+                        <Button
+                          variant="outline"
+                          onClick={handleCancel}
+                          className="w-full sm:w-auto"
+                        >
                           <X className="h-4 w-4 mr-2" />
                           Cancel
                         </Button>

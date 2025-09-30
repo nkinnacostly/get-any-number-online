@@ -14,6 +14,7 @@ export default function MessagesPage() {
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [checkingMessages, setCheckingMessages] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -62,6 +63,57 @@ export default function MessagesPage() {
     }
   };
 
+  const checkForNewMessages = async () => {
+    try {
+      setCheckingMessages(true);
+
+      // Get all active purchased numbers for the user
+      const { data: purchasedNumbers } = await supabase
+        .from("purchased_numbers")
+        .select("id, smspool_number_id")
+        .eq("user_id", user?.id)
+        .eq("status", "active");
+
+      if (!purchasedNumbers || purchasedNumbers.length === 0) {
+        console.log("No active numbers to check");
+        return;
+      }
+
+      // Check each number for new messages
+      for (const number of purchasedNumbers) {
+        try {
+          const response = await fetch("/api/smspool-proxy/check", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              orderid: number.smspool_number_id,
+              purchased_number_id: number.id,
+            }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log(`Checked number ${number.smspool_number_id}:`, result);
+          }
+        } catch (error) {
+          console.error(
+            `Error checking number ${number.smspool_number_id}:`,
+            error
+          );
+        }
+      }
+
+      // Refresh messages after checking
+      await fetchMessages();
+    } catch (error) {
+      console.error("Error checking for new messages:", error);
+    } finally {
+      setCheckingMessages(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -102,7 +154,9 @@ export default function MessagesPage() {
           <MessagesList
             messages={messages}
             onRefresh={fetchMessages}
+            onCheckMessages={checkForNewMessages}
             loading={loading}
+            checkingMessages={checkingMessages}
           />
         </main>
       </div>

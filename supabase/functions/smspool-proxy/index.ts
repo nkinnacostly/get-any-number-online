@@ -98,6 +98,17 @@ serve(async (req: Request) => {
     const json = await res.json();
     console.log("SMS Pool API response:", JSON.stringify(json, null, 2));
 
+    // Check if SMS Pool purchase was successful
+    if (!json || json.status !== 1 || !json.number) {
+      console.error("SMS Pool purchase failed:", json);
+      return new Response(
+        JSON.stringify({
+          error: json?.message || "Failed to purchase number from SMS Pool",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Calculate expiry date (typically 10 minutes for SMS numbers)
     const expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + 10);
@@ -137,17 +148,17 @@ serve(async (req: Request) => {
       );
     }
 
-    // 2) Use database transaction for atomic operations
+    // 2) Use database transaction for atomic operations (only after SMS Pool success)
     console.log("Starting database transaction...");
     const { data: transactionData, error: transactionError } =
       await supabase.rpc("purchase_number_transaction", {
         p_user_id: body.user_id,
-        p_phone_number: json?.number || json?.phone || "",
+        p_phone_number: json.number,
         p_country_code: body.country,
         p_service_name: body.service_name || `Service ${body.service}`,
-        p_smspool_number_id: json?.orderid || json?.order || json?.id || "",
+        p_smspool_number_id: json.orderid || json.order || json.id || "",
         p_cost: purchasePrice,
-        p_status: json?.status === 1 ? "active" : "expired",
+        p_status: "active", // Only successful purchases reach here
         p_expiry_date: expiryDate.toISOString(),
         p_purchase_amount: -purchasePrice, // negative for deduction
         p_description: `SMS number purchase - ${body.country}`,
@@ -184,21 +195,41 @@ serve(async (req: Request) => {
       body: form,
     });
     const json = await res.json();
+    console.log("SMS check response:", JSON.stringify(json, null, 2));
 
     // if sms arrived (json may contain sms text), store it
     if (json && json.status === 1 && json.sms) {
-      // normalize: json.sms might be array or object depending on API
-      // store each message
-      try {
-        await supabase.from("received_messages").insert({
-          number_id: purchased_number_id,
-          sender: json.sms.from || null,
-          message_text: json.sms.text || JSON.stringify(json.sms),
-          receive_date: new Date(),
-          is_read: false,
-        });
-      } catch (err) {
-        console.error(err);
+      console.log("SMS received, storing message...");
+
+      // Handle different SMS response formats
+      let messages = [];
+      if (Array.isArray(json.sms)) {
+        messages = json.sms;
+      } else {
+        messages = [json.sms];
+      }
+
+      // Store each message
+      for (const sms of messages) {
+        try {
+          const { data, error } = await supabase
+            .from("received_messages")
+            .insert({
+              number_id: purchased_number_id,
+              sender: sms.from || sms.sender || null,
+              message_text: sms.text || sms.message || JSON.stringify(sms),
+              receive_date: new Date(),
+              is_read: false,
+            });
+
+          if (error) {
+            console.error("Error storing message:", error);
+          } else {
+            console.log("Message stored successfully:", data);
+          }
+        } catch (err) {
+          console.error("Exception storing message:", err);
+        }
       }
     }
 
