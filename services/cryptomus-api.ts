@@ -121,12 +121,19 @@ class CryptomusAPI {
       const response = await axios(config);
       return response.data;
     } catch (error: any) {
+      console.error("Cryptomus API Error Details:");
+      console.error("Status:", error.response?.status);
+      console.error("Status Text:", error.response?.statusText);
       console.error(
-        "Cryptomus API Error:",
-        error.response?.data || error.message
+        "Response Data:",
+        JSON.stringify(error.response?.data, null, 2)
       );
+      console.error("Request Config:", JSON.stringify(config, null, 2));
+
       throw new Error(
-        `Cryptomus API Error: ${error.response?.data?.message || error.message}`
+        `Cryptomus API Error: ${error.response?.status} - ${
+          JSON.stringify(error.response?.data) || error.message
+        }`
       );
     }
   }
@@ -143,7 +150,7 @@ class CryptomusAPI {
     return this.makeRequest<{ state: number; result: CryptomusPaymentInfo }>(
       "/payment/info",
       { uuid },
-      "GET"
+      "POST"
     );
   }
 
@@ -161,7 +168,7 @@ class CryptomusAPI {
     return this.makeRequest<{ state: number; result: any[] }>(
       "/payment/currencies",
       {},
-      "GET"
+      "POST"
     );
   }
 
@@ -169,7 +176,7 @@ class CryptomusAPI {
     return this.makeRequest<{ state: number; result: any }>(
       "/payment/rates",
       {},
-      "GET"
+      "POST"
     );
   }
 }

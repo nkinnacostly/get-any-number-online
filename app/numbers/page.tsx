@@ -9,16 +9,27 @@ import { PurchaseFlow } from "@/components/numbers/purchase-flow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { SMSPoolService } from "@/services/sms-pool-api";
-import { Phone, RefreshCw } from "lucide-react";
+import { Phone, RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
 
 function NumbersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [showSuccess, setShowSuccess] = useState(false);
   const [purchasedNumber, setPurchasedNumber] = useState<any>(null);
+  const [purchasedNumbers, setPurchasedNumbers] = useState<any[]>([]);
+  const [loadingNumbers, setLoadingNumbers] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -27,10 +38,117 @@ function NumbersPage() {
     }
   }, [user, authLoading, router]);
 
+  // Fetch purchased numbers
+  const fetchPurchasedNumbers = async () => {
+    if (!user) return;
+
+    setLoadingNumbers(true);
+    try {
+      const { data, error } = await supabase
+        .from("purchased_numbers")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching purchased numbers:", error);
+        return;
+      }
+
+      // Check status for each number with SMS Pool
+      const numbersWithStatus = await Promise.all(
+        (data || []).map(async (number) => {
+          if (number.smspool_number_id && number.status === "active") {
+            try {
+              const smsService = new SMSPoolService(
+                process.env.NEXT_PUBLIC_SMSPOOL_API_KEY || ""
+              );
+              const statusResult = await smsService.checkStatus(
+                number.smspool_number_id
+              );
+
+              if (statusResult.success && statusResult.data) {
+                // Update status based on SMS Pool response
+                let newStatus = number.status;
+                let newExpiryDate = number.expiry_date;
+
+                // Check if number is expired based on SMS Pool status
+                if (
+                  statusResult.data.status === 0 ||
+                  statusResult.data.status === 2
+                ) {
+                  newStatus = "expired";
+                } else if (statusResult.data.status === 1) {
+                  newStatus = "active";
+                }
+
+                // Update expiry date if provided by SMS Pool
+                if (statusResult.data.expiry || statusResult.data.expires_at) {
+                  newExpiryDate =
+                    statusResult.data.expiry || statusResult.data.expires_at;
+                } else if (statusResult.data.time_left) {
+                  const expiryDate = new Date();
+                  expiryDate.setMinutes(
+                    expiryDate.getMinutes() +
+                      parseInt(statusResult.data.time_left)
+                  );
+                  newExpiryDate = expiryDate.toISOString();
+                }
+
+                // Update database if status changed
+                if (
+                  newStatus !== number.status ||
+                  newExpiryDate !== number.expiry_date
+                ) {
+                  await supabase
+                    .from("purchased_numbers")
+                    .update({
+                      status: newStatus,
+                      expiry_date: newExpiryDate,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", number.id);
+                }
+
+                return {
+                  ...number,
+                  status: newStatus,
+                  expiry_date: newExpiryDate,
+                };
+              }
+            } catch (error) {
+              console.error(
+                `Error checking status for number ${number.smspool_number_id}:`,
+                error
+              );
+            }
+          }
+
+          return number;
+        })
+      );
+
+      setPurchasedNumbers(numbersWithStatus);
+    } catch (error) {
+      console.error("Error fetching purchased numbers:", error);
+    } finally {
+      setLoadingNumbers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchPurchasedNumbers();
+    }
+  }, [user]);
+
   const handlePurchaseComplete = async (purchaseData?: any) => {
     console.log("Purchase completed successfully!", purchaseData);
     setPurchasedNumber(purchaseData);
     setShowSuccess(true);
+
+    // Refresh purchased numbers list
+    await fetchPurchasedNumbers();
 
     // Trigger a custom event to refresh wallet data in other components
     if (typeof window !== "undefined") {
@@ -42,6 +160,57 @@ function NumbersPage() {
       setShowSuccess(false);
       setPurchasedNumber(null);
     }, 5000);
+  };
+
+  // Helper function to get status badge
+  const getStatusBadge = (status: string, expiryDate: string) => {
+    const now = new Date();
+    const expiry = new Date(expiryDate);
+    const isExpired = now > expiry;
+
+    if (isExpired || status === "expired") {
+      return (
+        <Badge variant="destructive" className="flex items-center gap-1">
+          <XCircle className="h-3 w-3" />
+          Expired
+        </Badge>
+      );
+    }
+
+    if (status === "active") {
+      return (
+        <Badge variant="default" className="flex items-center gap-1">
+          <CheckCircle className="h-3 w-3" />
+          Active
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge variant="secondary" className="flex items-center gap-1">
+        <Clock className="h-3 w-3" />
+        {status}
+      </Badge>
+    );
+  };
+
+  // Helper function to format time remaining
+  const getTimeRemaining = (expiryDate: string) => {
+    const now = new Date();
+    const expiry = new Date(expiryDate);
+    const diff = expiry.getTime() - now.getTime();
+
+    if (diff <= 0) {
+      return "Expired";
+    }
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
   };
 
   if (authLoading) {
@@ -124,6 +293,157 @@ function NumbersPage() {
             )}
 
             <PurchaseFlow onPurchaseComplete={handlePurchaseComplete} />
+
+            {/* Purchased Numbers Table */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5" />
+                    Your Numbers
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchPurchasedNumbers}
+                    disabled={loadingNumbers}
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 mr-2 ${
+                        loadingNumbers ? "animate-spin" : ""
+                      }`}
+                    />
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loadingNumbers ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+                    <span>Loading numbers...</span>
+                  </div>
+                ) : purchasedNumbers.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Phone className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No numbers purchased yet</p>
+                    <p className="text-sm">Purchase your first number above</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Phone Number</TableHead>
+                            <TableHead>Country</TableHead>
+                            <TableHead>Service</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Time Remaining</TableHead>
+                            <TableHead>Cost</TableHead>
+                            <TableHead>Purchased</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {purchasedNumbers.map((number) => (
+                            <TableRow key={number.id}>
+                              <TableCell className="font-mono">
+                                {number.phone_number}
+                              </TableCell>
+                              <TableCell>{number.country_code}</TableCell>
+                              <TableCell>{number.service_name}</TableCell>
+                              <TableCell>
+                                {getStatusBadge(
+                                  number.status,
+                                  number.expiry_date
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm text-muted-foreground">
+                                  {getTimeRemaining(number.expiry_date)}
+                                </span>
+                              </TableCell>
+                              <TableCell>${number.cost.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(
+                                    number.created_at
+                                  ).toLocaleDateString()}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Cards */}
+                    <div className="md:hidden space-y-4">
+                      {purchasedNumbers.map((number) => (
+                        <Card key={number.id} className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="font-mono text-lg font-semibold">
+                                {number.phone_number}
+                              </div>
+                              {getStatusBadge(
+                                number.status,
+                                number.expiry_date
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Country:
+                                </span>
+                                <div className="font-medium">
+                                  {number.country_code}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Service:
+                                </span>
+                                <div className="font-medium">
+                                  {number.service_name}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Cost:
+                                </span>
+                                <div className="font-medium">
+                                  ${number.cost.toFixed(2)}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Time Left:
+                                </span>
+                                <div className="font-medium">
+                                  {getTimeRemaining(number.expiry_date)}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="pt-2 border-t">
+                              <span className="text-muted-foreground text-sm">
+                                Purchased:{" "}
+                                {new Date(
+                                  number.created_at
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>

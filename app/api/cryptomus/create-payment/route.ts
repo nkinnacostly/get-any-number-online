@@ -23,22 +23,22 @@ export async function POST(request: NextRequest) {
     // Get base URL, fallback to localhost for development
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+    // Create minimal payment data first to test
     const paymentData = {
       amount: amount.toString(),
       currency: "USD", // We always charge in USD
       order_id,
       url_return: `${baseUrl}/wallet?payment=success`,
       url_callback: `${baseUrl}/api/cryptomus/webhook`,
-      is_payment_multiple: false,
-      lifetime: 3600, // 1 hour
       to_currency: currency,
-      subtract: 0,
-      accuracy_payment_percent: 0,
       additional_data,
-      currencies: [{ currency: currency, network: network || "" }],
       customer_email,
     };
 
+    console.log(
+      "Creating payment with data:",
+      JSON.stringify(paymentData, null, 2)
+    );
     const result = await cryptomusAPI.createPayment(paymentData);
 
     if (result.state === 0) {

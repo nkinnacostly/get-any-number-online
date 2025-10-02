@@ -281,22 +281,6 @@ function DashboardPage() {
                     className="pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-auto transition-all duration-200 hover:border-primary/50 focus:scale-105"
                   />
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative transition-all duration-200 hover:scale-110 hover:bg-muted/50"
-                >
-                  <MessageSquare className="h-5 w-5 transition-transform duration-200" />
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full animate-pulse"></span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative transition-all duration-200 hover:scale-110 hover:bg-muted/50"
-                >
-                  <Bell className="h-5 w-5 transition-transform duration-200" />
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full animate-pulse"></span>
-                </Button>
               </div>
             </div>
 

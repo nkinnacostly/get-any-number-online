@@ -40,6 +40,7 @@ export default function MessagesPage() {
         `
         )
         .order("receive_date", { ascending: false });
+      console.log("recentMessages", recentMessages);
 
       setMessages((recentMessages as any) || []);
 

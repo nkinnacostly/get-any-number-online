@@ -128,7 +128,6 @@ export class SMSPoolService {
       const requestBody = {
         country,
         service,
-        activation_type: "SMS",
         ...options,
       };
 
@@ -151,6 +150,47 @@ export class SMSPoolService {
 
       const data = await response.json();
       console.log("SMS Pool API response:", data);
+
+      if (data.error) {
+        return {
+          success: false,
+          error: data.error,
+        };
+      }
+
+      return {
+        success: true,
+        data: data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      };
+    }
+  }
+
+  // Check number status
+  async checkStatus(orderId: string): Promise<SMSPoolResponse> {
+    try {
+      const requestBody = {
+        orderid: orderId,
+      };
+
+      const response = await fetch("/api/smspool-proxy/status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       if (data.error) {
         return {

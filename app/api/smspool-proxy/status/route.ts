@@ -5,11 +5,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields
-    if (!body.country || !body.service) {
+    if (!body.orderid) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields: country and service",
+          error: "Missing required field: orderid",
         },
         { status: 400 }
       );
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Call Supabase edge function
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/smspool-proxy/order`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/smspool-proxy/status`,
       {
         method: "POST",
         headers: {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error calling order edge function:", error);
+    console.error("Error calling status edge function:", error);
     return NextResponse.json(
       {
         success: false,

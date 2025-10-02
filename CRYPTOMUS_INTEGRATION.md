@@ -133,7 +133,7 @@ Additional cryptocurrencies can be added by updating the `popularCurrencies` arr
 Configure the following webhook URL in your Cryptomus dashboard:
 
 ```
-https://yourdomain.com/api/cryptomus/webhook
+https://getanynumberonline.com/api/cryptomus/webhook
 ```
 
 The webhook handles:

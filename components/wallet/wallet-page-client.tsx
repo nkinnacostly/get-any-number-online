@@ -45,12 +45,39 @@ export function WalletPageClient() {
       fetchWalletData();
     };
 
+    // Listen for payment completion notifications
+    const handlePaymentCompleted = (event: any) => {
+      console.log("Payment completed:", event.detail);
+      fetchWalletData();
+      // Show success notification
+      if (event.detail.amount) {
+        // You can add a toast notification here
+        console.log(
+          `Payment of $${event.detail.amount} completed successfully!`
+        );
+      }
+    };
+
+    // Listen for payment failure notifications
+    const handlePaymentFailed = (event: any) => {
+      console.log("Payment failed:", event.detail);
+      // Show failure notification
+      if (event.detail.reason) {
+        // You can add a toast notification here
+        console.log(`Payment failed: ${event.detail.reason}`);
+      }
+    };
+
     // Only add event listeners on client side
     if (typeof window !== "undefined") {
       window.addEventListener("walletUpdated", handleWalletUpdate);
+      window.addEventListener("paymentCompleted", handlePaymentCompleted);
+      window.addEventListener("paymentFailed", handlePaymentFailed);
 
       return () => {
         window.removeEventListener("walletUpdated", handleWalletUpdate);
+        window.removeEventListener("paymentCompleted", handlePaymentCompleted);
+        window.removeEventListener("paymentFailed", handlePaymentFailed);
       };
     }
   }, [user, authLoading, router]);

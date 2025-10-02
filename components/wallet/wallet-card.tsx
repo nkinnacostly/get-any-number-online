@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet, Plus, CreditCard, History, Coins } from "lucide-react";
+import { Wallet, Plus, CreditCard, History, Coins, Clock } from "lucide-react";
 import { CryptomusFunding } from "./cryptomus-funding";
 
 interface WalletCardProps {
@@ -40,6 +40,24 @@ export function WalletCard({
   const [depositAmount, setDepositAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [backgroundChecking, setBackgroundChecking] = useState(false);
+
+  // Listen for background checking status
+  useEffect(() => {
+    const handleBackgroundChecking = (event: any) => {
+      setBackgroundChecking(event.detail.checking);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("backgroundChecking", handleBackgroundChecking);
+      return () => {
+        window.removeEventListener(
+          "backgroundChecking",
+          handleBackgroundChecking
+        );
+      };
+    }
+  }, []);
 
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
@@ -81,12 +99,23 @@ export function WalletCard({
                 </div>
                 <span>Wallet Balance</span>
               </CardTitle>
-              <Badge
-                variant="secondary"
-                className="bg-white/20 text-primary-foreground border-white/30"
-              >
-                Active
-              </Badge>
+              <div className="flex items-center space-x-2">
+                {backgroundChecking && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-500/20 text-blue-100 border-blue-300/30"
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    Checking Payment
+                  </Badge>
+                )}
+                <Badge
+                  variant="secondary"
+                  className="bg-white/20 text-primary-foreground border-white/30"
+                >
+                  Active
+                </Badge>
+              </div>
             </div>
           </CardHeader>
 

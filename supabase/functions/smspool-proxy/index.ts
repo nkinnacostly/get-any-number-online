@@ -99,8 +99,22 @@ serve(async (req: Request) => {
     console.log("SMS Pool API response:", JSON.stringify(json, null, 2));
 
     // Check if SMS Pool purchase was successful
-    if (!json || json.status !== 1 || !json.number) {
+    // SMS Pool API returns success: 1 for success, and the number field
+    if (!json || json.success !== 1 || !json.number) {
       console.error("SMS Pool purchase failed:", json);
+
+      // Handle specific error types
+      if (json.type === "BALANCE_ERROR") {
+        return new Response(
+          JSON.stringify({
+            error:
+              "SMS Pool account has insufficient balance. Please contact support to add funds to the SMS Pool account.",
+            details: json.message,
+          }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
       return new Response(
         JSON.stringify({
           error: json?.message || "Failed to purchase number from SMS Pool",
@@ -109,9 +123,29 @@ serve(async (req: Request) => {
       );
     }
 
-    // Calculate expiry date (typically 10 minutes for SMS numbers)
-    const expiryDate = new Date();
-    expiryDate.setMinutes(expiryDate.getMinutes() + 10);
+    // Calculate expiry date from SMS Pool response
+    let expiryDate = new Date();
+
+    // Check if SMS Pool response contains expiry information
+    if (json.expiry || json.expires_at || json.time_left) {
+      // If we have a specific expiry time, use it
+      if (json.expiry) {
+        expiryDate = new Date(json.expiry);
+      } else if (json.expires_at) {
+        expiryDate = new Date(json.expires_at);
+      } else if (json.time_left) {
+        // time_left is typically in minutes
+        expiryDate = new Date();
+        expiryDate.setMinutes(
+          expiryDate.getMinutes() + parseInt(json.time_left)
+        );
+      }
+    } else {
+      // Fallback: SMS Pool numbers typically last 10 minutes
+      expiryDate.setMinutes(expiryDate.getMinutes() + 10);
+    }
+
+    console.log("Calculated expiry date:", expiryDate.toISOString());
 
     // 1) Check user wallet balance before any operations
     console.log("Checking wallet balance for user:", body.user_id);
@@ -184,6 +218,24 @@ serve(async (req: Request) => {
     );
   }
 
+  if (functionPath === "status" && req.method === "POST") {
+    const { orderid } = await req.json();
+    const form = new URLSearchParams();
+    form.append("key", SMSPOOL_KEY);
+    form.append("orderid", orderid);
+
+    const res = await fetch("https://api.smspool.net/sms/check", {
+      method: "POST",
+      body: form,
+    });
+    const json = await res.json();
+    console.log("SMS status response:", JSON.stringify(json, null, 2));
+
+    return new Response(JSON.stringify(json), {
+      headers: { "content-type": "application/json" },
+    });
+  }
+
   if (functionPath === "check" && req.method === "POST") {
     const { orderid, purchased_number_id } = await req.json();
     const form = new URLSearchParams();
@@ -198,39 +250,92 @@ serve(async (req: Request) => {
     console.log("SMS check response:", JSON.stringify(json, null, 2));
 
     // if sms arrived (json may contain sms text), store it
-    if (json && json.status === 1 && json.sms) {
+    // Status 1 = SMS received, Status 3 = SMS received (different format)
+    if (json && (json.status === 1 || json.status === 3) && json.sms) {
       console.log("SMS received, storing message...");
+      console.log("SMS data:", JSON.stringify(json.sms, null, 2));
+      console.log("Purchased number ID:", purchased_number_id);
 
       // Handle different SMS response formats
       let messages = [];
       if (Array.isArray(json.sms)) {
         messages = json.sms;
+      } else if (json.status === 3 && json.full_sms) {
+        // Status 3 format: sms contains code, full_sms contains full message
+        messages = [
+          {
+            text: json.full_sms,
+            code: json.sms,
+            from: "System",
+          },
+        ];
       } else {
         messages = [json.sms];
       }
 
-      // Store each message
+      console.log("Processing messages:", messages.length);
+
+      // Store each message (check for duplicates first)
       for (const sms of messages) {
         try {
+          const messageText = sms.text || sms.message || JSON.stringify(sms);
+          const sender = sms.from || sms.sender || null;
+
+          // Check if this exact message already exists for this number
+          const { data: existingMessage, error: checkError } = await supabase
+            .from("received_messages")
+            .select("id")
+            .eq("number_id", purchased_number_id)
+            .eq("message_text", messageText)
+            .eq("sender", sender)
+            .limit(1);
+
+          if (checkError) {
+            console.error("Error checking for duplicate message:", checkError);
+            continue; // Skip this message if we can't check for duplicates
+          }
+
+          if (existingMessage && existingMessage.length > 0) {
+            console.log("Duplicate message found, skipping insertion:", {
+              messageText: messageText.substring(0, 50) + "...",
+              sender,
+              numberId: purchased_number_id,
+            });
+            continue; // Skip duplicate message
+          }
+
+          const messageData = {
+            number_id: purchased_number_id,
+            sender: sender,
+            message_text: messageText,
+            receive_date: new Date(),
+            is_read: false,
+          };
+
+          console.log(
+            "Inserting new message data:",
+            JSON.stringify(messageData, null, 2)
+          );
+
           const { data, error } = await supabase
             .from("received_messages")
-            .insert({
-              number_id: purchased_number_id,
-              sender: sms.from || sms.sender || null,
-              message_text: sms.text || sms.message || JSON.stringify(sms),
-              receive_date: new Date(),
-              is_read: false,
-            });
+            .insert(messageData);
 
           if (error) {
             console.error("Error storing message:", error);
+            console.error("Error details:", JSON.stringify(error, null, 2));
           } else {
-            console.log("Message stored successfully:", data);
+            console.log("New message stored successfully:", data);
           }
         } catch (err) {
           console.error("Exception storing message:", err);
         }
       }
+    } else {
+      console.log("No SMS received or status not 1 or 3");
+      console.log("Response status:", json?.status);
+      console.log("SMS data:", json?.sms);
+      console.log("Full SMS data:", json?.full_sms);
     }
 
     return new Response(JSON.stringify(json), {

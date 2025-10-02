@@ -58,7 +58,7 @@ CREATE TABLE public.transactions (
   type TEXT NOT NULL CHECK (type IN ('purchase', 'refund', 'deposit', 'withdrawal')),
   amount DECIMAL(10,2) NOT NULL,
   description TEXT,
-  reference_id UUID, -- Reference to purchased_numbers or external transaction
+  reference_id TEXT, -- Reference to purchased_numbers or external transaction
   status TEXT DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -137,6 +137,10 @@ CREATE POLICY "Users can view messages for own numbers" ON public.received_messa
       AND purchased_numbers.user_id = auth.uid()
     )
   );
+
+-- Allow service role to insert messages (for edge functions)
+CREATE POLICY "Service role can insert messages" ON public.received_messages
+  FOR INSERT WITH CHECK (true);
 
 -- Transactions: Users can only see their own transactions
 CREATE POLICY "Users can view own transactions" ON public.transactions
