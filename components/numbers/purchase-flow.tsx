@@ -527,10 +527,10 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
             let fallbackPrice = getEstimatedPrice(country.short_name); // Fallback to estimated price
 
             if (countryPricing.length > 0) {
-              // Create pricing options with 50% markup
+              // Create pricing options with 35% markup
               pricingOptions = countryPricing.map((pricing: any) => {
                 const originalPrice = parseFloat(pricing.price);
-                const markedUpPrice = originalPrice * 1.5; // Always apply 50% markup
+                const markedUpPrice = originalPrice * 1.35; // Always apply 35% markup
 
                 return {
                   pool: pricing.pool,
@@ -549,7 +549,7 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
               pricingOptions = [
                 {
                   pool: 1, // Default pool
-                  price: fallbackPrice * 1.5, // Always apply 50% markup to fallback
+                  price: fallbackPrice * 1.35, // Always apply 35% markup to fallback
                   originalPrice: fallbackPrice,
                 },
               ];
@@ -602,11 +602,11 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         pricingResult.data &&
         pricingResult.data.length > 0
       ) {
-        // Create pricing options with 50% markup
+        // Create pricing options with 35% markup
         const pricingOptions: PricingOption[] = pricingResult.data.map(
           (pricing: any) => {
             const originalPrice = parseFloat(pricing.price);
-            const markedUpPrice = originalPrice * 1.5; // Always apply 50% markup
+            const markedUpPrice = originalPrice * 1.35; // Always apply 35% markup
 
             return {
               pool: pricing.pool,
