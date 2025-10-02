@@ -21,7 +21,18 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { SMSPoolService } from "@/services/sms-pool-api";
-import { Phone, RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
+import {
+  Phone,
+  RefreshCw,
+  Clock,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+  ChevronRight,
+  MessageSquare,
+  Trash2,
+  Eye,
+} from "lucide-react";
 
 function NumbersPage() {
   const { user, loading: authLoading } = useAuth();
@@ -31,6 +42,8 @@ function NumbersPage() {
   const [purchasedNumbers, setPurchasedNumbers] = useState<any[]>([]);
   const [loadingNumbers, setLoadingNumbers] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [expandedNumber, setExpandedNumber] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -178,6 +191,20 @@ function NumbersPage() {
 
       setPurchasedNumbers(numbersWithStatus);
       setLastUpdated(new Date());
+
+      // Fetch messages for all numbers
+      if (numbersWithStatus.length > 0) {
+        const { data: recentMessages } = await supabase
+          .from("received_messages")
+          .select("*")
+          .in(
+            "number_id",
+            numbersWithStatus.map((n: any) => n.id)
+          )
+          .order("receive_date", { ascending: false });
+
+        setMessages((recentMessages as any) || []);
+      }
     } catch (error) {
       console.error("Error fetching purchased numbers:", error);
     } finally {
@@ -216,6 +243,48 @@ function NumbersPage() {
       setShowSuccess(false);
       setPurchasedNumber(null);
     }, 5000);
+  };
+
+  // Mark message as read when viewed
+  const markMessageAsRead = async (messageId: string) => {
+    try {
+      await supabase
+        .from("received_messages")
+        .update({ is_read: true })
+        .eq("id", messageId);
+
+      // Update local state
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg.id === messageId ? { ...msg, is_read: true } : msg
+        )
+      );
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+    }
+  };
+
+  // Delete a message
+  const deleteMessage = async (messageId: string) => {
+    try {
+      await supabase.from("received_messages").delete().eq("id", messageId);
+
+      // Update local state
+      setMessages((prevMessages) =>
+        prevMessages.filter((msg) => msg.id !== messageId)
+      );
+    } catch (error) {
+      console.error("Error deleting message:", error);
+    }
+  };
+
+  // Toggle number expansion to show/hide messages
+  const toggleNumberExpansion = (numberId: string) => {
+    if (expandedNumber === numberId) {
+      setExpandedNumber(null);
+    } else {
+      setExpandedNumber(numberId);
+    }
   };
 
   // Helper function to get status badge
@@ -453,6 +522,7 @@ function NumbersPage() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead></TableHead>
                             <TableHead>Phone Number</TableHead>
                             <TableHead>Country</TableHead>
                             <TableHead>Service</TableHead>
@@ -463,107 +533,318 @@ function NumbersPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {purchasedNumbers.map((number) => (
-                            <TableRow key={number.id}>
-                              <TableCell className="font-mono">
-                                {number.phone_number}
-                              </TableCell>
-                              <TableCell>{number.country_code}</TableCell>
-                              <TableCell>{number.service_name}</TableCell>
-                              <TableCell>
-                                {getStatusBadge(
-                                  number.status,
-                                  number.expiry_date,
-                                  number.time_left
+                          {purchasedNumbers.map((number) => {
+                            const numberMessages = messages.filter(
+                              (msg) => msg.number_id === number.id
+                            );
+                            const hasMessages = numberMessages.length > 0;
+                            const isExpanded = expandedNumber === number.id;
+
+                            return (
+                              <>
+                                <TableRow key={number.id}>
+                                  <TableCell>
+                                    {hasMessages && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          toggleNumberExpansion(number.id)
+                                        }
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        {isExpanded ? (
+                                          <ChevronDown className="h-4 w-4" />
+                                        ) : (
+                                          <ChevronRight className="h-4 w-4" />
+                                        )}
+                                      </Button>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="font-mono">
+                                    {number.phone_number}
+                                  </TableCell>
+                                  <TableCell>{number.country_code}</TableCell>
+                                  <TableCell>{number.service_name}</TableCell>
+                                  <TableCell>
+                                    {getStatusBadge(
+                                      number.status,
+                                      number.expiry_date,
+                                      number.time_left
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="text-sm text-muted-foreground">
+                                      {getTimeRemaining(
+                                        number.expiry_date,
+                                        number.time_left
+                                      )}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>
+                                    ${number.cost.toFixed(2)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className="text-sm text-muted-foreground">
+                                      {new Date(
+                                        number.created_at
+                                      ).toLocaleDateString()}
+                                    </span>
+                                  </TableCell>
+                                </TableRow>
+
+                                {/* Expanded messages row */}
+                                {isExpanded && hasMessages && (
+                                  <TableRow>
+                                    <TableCell colSpan={8} className="p-0">
+                                      <div className="bg-muted/30 p-4">
+                                        <div className="space-y-3">
+                                          <div className="flex items-center gap-2 mb-3">
+                                            <MessageSquare className="h-4 w-4" />
+                                            <span className="font-medium">
+                                              Messages ({numberMessages.length})
+                                            </span>
+                                          </div>
+                                          {numberMessages.map((message) => (
+                                            <div
+                                              key={message.id}
+                                              className="bg-background p-3 rounded-lg border"
+                                            >
+                                              <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                  <div className="flex items-center gap-2 mb-2">
+                                                    <span className="text-sm font-medium">
+                                                      From:{" "}
+                                                      {message.sender ||
+                                                        "Unknown"}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                      {new Date(
+                                                        message.receive_date
+                                                      ).toLocaleString()}
+                                                    </span>
+                                                    {!message.is_read && (
+                                                      <Badge
+                                                        variant="default"
+                                                        className="text-xs"
+                                                      >
+                                                        Unread
+                                                      </Badge>
+                                                    )}
+                                                  </div>
+                                                  <p className="text-sm text-foreground">
+                                                    {message.message_text}
+                                                  </p>
+                                                </div>
+                                                <div className="flex items-center gap-1 ml-4">
+                                                  {!message.is_read && (
+                                                    <Button
+                                                      variant="ghost"
+                                                      size="sm"
+                                                      onClick={() =>
+                                                        markMessageAsRead(
+                                                          message.id
+                                                        )
+                                                      }
+                                                      className="h-8 w-8 p-0"
+                                                      title="Mark as read"
+                                                    >
+                                                      <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                  )}
+                                                  <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                      deleteMessage(message.id)
+                                                    }
+                                                    className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                                    title="Delete message"
+                                                  >
+                                                    <Trash2 className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
                                 )}
-                              </TableCell>
-                              <TableCell>
-                                <span className="text-sm text-muted-foreground">
-                                  {getTimeRemaining(
-                                    number.expiry_date,
-                                    number.time_left
-                                  )}
-                                </span>
-                              </TableCell>
-                              <TableCell>${number.cost.toFixed(2)}</TableCell>
-                              <TableCell>
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(
-                                    number.created_at
-                                  ).toLocaleDateString()}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                              </>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
 
                     {/* Mobile Cards */}
                     <div className="md:hidden space-y-4">
-                      {purchasedNumbers.map((number) => (
-                        <Card key={number.id} className="p-4">
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="font-mono text-lg font-semibold">
-                                {number.phone_number}
-                              </div>
-                              {getStatusBadge(
-                                number.status,
-                                number.expiry_date,
-                                number.time_left
-                              )}
-                            </div>
+                      {purchasedNumbers.map((number) => {
+                        const numberMessages = messages.filter(
+                          (msg) => msg.number_id === number.id
+                        );
+                        const hasMessages = numberMessages.length > 0;
+                        const isExpanded = expandedNumber === number.id;
 
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Country:
-                                </span>
-                                <div className="font-medium">
-                                  {number.country_code}
+                        return (
+                          <Card key={number.id} className="p-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="font-mono text-lg font-semibold">
+                                  {number.phone_number}
                                 </div>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Service:
-                                </span>
-                                <div className="font-medium">
-                                  {number.service_name}
-                                </div>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Cost:
-                                </span>
-                                <div className="font-medium">
-                                  ${number.cost.toFixed(2)}
-                                </div>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">
-                                  Time Left:
-                                </span>
-                                <div className="font-medium">
-                                  {getTimeRemaining(
+                                <div className="flex items-center gap-2">
+                                  {getStatusBadge(
+                                    number.status,
                                     number.expiry_date,
                                     number.time_left
                                   )}
+                                  {hasMessages && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        toggleNumberExpansion(number.id)
+                                      }
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronDown className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
-                            </div>
 
-                            <div className="pt-2 border-t">
-                              <span className="text-muted-foreground text-sm">
-                                Purchased:{" "}
-                                {new Date(
-                                  number.created_at
-                                ).toLocaleDateString()}
-                              </span>
+                              <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Country:
+                                  </span>
+                                  <div className="font-medium">
+                                    {number.country_code}
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Service:
+                                  </span>
+                                  <div className="font-medium">
+                                    {number.service_name}
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Cost:
+                                  </span>
+                                  <div className="font-medium">
+                                    ${number.cost.toFixed(2)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Time Left:
+                                  </span>
+                                  <div className="font-medium">
+                                    {getTimeRemaining(
+                                      number.expiry_date,
+                                      number.time_left
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="pt-2 border-t">
+                                <span className="text-muted-foreground text-sm">
+                                  Purchased:{" "}
+                                  {new Date(
+                                    number.created_at
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+
+                              {/* Expanded messages section */}
+                              {isExpanded && hasMessages && (
+                                <div className="pt-3 border-t">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-2">
+                                      <MessageSquare className="h-4 w-4" />
+                                      <span className="font-medium text-sm">
+                                        Messages ({numberMessages.length})
+                                      </span>
+                                    </div>
+                                    {numberMessages.map((message) => (
+                                      <div
+                                        key={message.id}
+                                        className="bg-muted/50 p-3 rounded-lg"
+                                      >
+                                        <div className="space-y-2">
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs font-medium">
+                                                From:{" "}
+                                                {message.sender || "Unknown"}
+                                              </span>
+                                              {!message.is_read && (
+                                                <Badge
+                                                  variant="default"
+                                                  className="text-xs"
+                                                >
+                                                  Unread
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                              {!message.is_read && (
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={() =>
+                                                    markMessageAsRead(
+                                                      message.id
+                                                    )
+                                                  }
+                                                  className="h-6 w-6 p-0"
+                                                  title="Mark as read"
+                                                >
+                                                  <Eye className="h-3 w-3" />
+                                                </Button>
+                                              )}
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                  deleteMessage(message.id)
+                                                }
+                                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                                title="Delete message"
+                                              >
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                          <p className="text-xs text-foreground">
+                                            {message.message_text}
+                                          </p>
+                                          <span className="text-xs text-muted-foreground">
+                                            {new Date(
+                                              message.receive_date
+                                            ).toLocaleString()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        </Card>
-                      ))}
+                          </Card>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
