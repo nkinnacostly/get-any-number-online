@@ -38,10 +38,28 @@ export function RecentNumbers({
     switch (status) {
       case "active":
         return <Badge variant="default">Active</Badge>;
+      case "completed":
+        return (
+          <Badge
+            variant="default"
+            className="bg-green-100 text-green-800 border-green-200"
+          >
+            SMS Received
+          </Badge>
+        );
       case "expired":
         return <Badge variant="destructive">Expired</Badge>;
       case "cancelled":
         return <Badge variant="secondary">Cancelled</Badge>;
+      case "refunded":
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-800 border-blue-200"
+          >
+            Refunded
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

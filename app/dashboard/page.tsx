@@ -29,7 +29,7 @@ function DashboardPage() {
   const router = useRouter();
 
   const [services, setServices] = useState<any[]>([]);
-  const [myNumbers, setMyNumbers] = useState([]);
+  const [myNumbers, setMyNumbers] = useState<any[]>([]);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -44,6 +44,11 @@ function DashboardPage() {
     if (user) {
       fetchUserData();
 
+      // Set up automatic status checking every 30 seconds
+      const interval = setInterval(() => {
+        fetchUserData();
+      }, 30000); // 30 seconds
+
       // Listen for wallet updates
       const handleWalletUpdate = () => {
         fetchUserData();
@@ -54,9 +59,14 @@ function DashboardPage() {
         window.addEventListener("walletUpdated", handleWalletUpdate);
 
         return () => {
+          clearInterval(interval);
           window.removeEventListener("walletUpdated", handleWalletUpdate);
         };
       }
+
+      return () => {
+        clearInterval(interval);
+      };
     }
   }, [user, authLoading, router]);
 
@@ -78,9 +88,118 @@ function DashboardPage() {
       const { data: numbers } = await supabase
         .from("purchased_numbers")
         .select("*")
-        .order("purchase_date", { ascending: false });
+        .eq("user_id", user?.id)
+        .order("created_at", { ascending: false });
 
-      setMyNumbers((numbers as any) || []);
+      // Check status for each number with SMS Pool
+      const numbersWithStatus = await Promise.all(
+        (numbers || []).map(async (number: any) => {
+          if (number.smspool_number_id) {
+            try {
+              const smsService = new SMSPoolService(
+                process.env.NEXT_PUBLIC_SMSPOOL_API_KEY || ""
+              );
+              const statusResult = await smsService.checkStatus(
+                number.smspool_number_id
+              );
+
+              if (statusResult.success && statusResult.data) {
+                // Update status based on SMS Pool response
+                let newStatus = number.status;
+                let newExpiryDate = number.expiry_date;
+
+                // SMS Pool status codes:
+                // 0 = Waiting for SMS
+                // 1 = SMS received
+                // 2 = Expired
+                // 3 = SMS received (different format)
+                // 4 = Cancelled
+                // 5 = Refunded
+                // 6 = Refunded (different format)
+                // 7 = Waiting for resend
+                // 8 = Resend cancelled
+
+                switch (statusResult.data.status) {
+                  case 0:
+                  case 7:
+                    newStatus = "active";
+                    break;
+                  case 1:
+                  case 3:
+                    newStatus = "completed";
+                    break;
+                  case 2:
+                    newStatus = "expired";
+                    break;
+                  case 4:
+                  case 8:
+                    newStatus = "cancelled";
+                    break;
+                  case 5:
+                  case 6:
+                    newStatus = "refunded";
+                    break;
+                  default:
+                    newStatus = "unknown";
+                }
+
+                // Calculate time left and expiry date
+                if (statusResult.data.expiration) {
+                  // Convert Unix timestamp to ISO string
+                  newExpiryDate = new Date(
+                    statusResult.data.expiration * 1000
+                  ).toISOString();
+                } else if (statusResult.data.expires_in) {
+                  // expires_in is in seconds
+                  const expiryDate = new Date();
+                  expiryDate.setSeconds(
+                    expiryDate.getSeconds() + statusResult.data.expires_in
+                  );
+                  newExpiryDate = expiryDate.toISOString();
+                } else if (statusResult.data.time_left) {
+                  // time_left is typically in minutes
+                  const expiryDate = new Date();
+                  expiryDate.setMinutes(
+                    expiryDate.getMinutes() +
+                      parseInt(statusResult.data.time_left)
+                  );
+                  newExpiryDate = expiryDate.toISOString();
+                }
+
+                // Update database if status changed
+                if (
+                  newStatus !== number.status ||
+                  newExpiryDate !== number.expiry_date
+                ) {
+                  await supabase
+                    .from("purchased_numbers")
+                    .update({
+                      status: newStatus,
+                      expiry_date: newExpiryDate,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", number.id);
+                }
+
+                return {
+                  ...number,
+                  status: newStatus,
+                  expiry_date: newExpiryDate,
+                };
+              }
+            } catch (error) {
+              console.error(
+                `Error checking status for number ${number.smspool_number_id}:`,
+                error
+              );
+            }
+          }
+
+          return number;
+        })
+      );
+
+      setMyNumbers(numbersWithStatus);
 
       // Fetch available services
       const smsService = new SMSPoolService(
