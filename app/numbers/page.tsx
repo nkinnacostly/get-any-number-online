@@ -30,6 +30,7 @@ function NumbersPage() {
   const [purchasedNumber, setPurchasedNumber] = useState<any>(null);
   const [purchasedNumbers, setPurchasedNumbers] = useState<any[]>([]);
   const [loadingNumbers, setLoadingNumbers] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -58,7 +59,7 @@ function NumbersPage() {
       // Check status for each number with SMS Pool
       const numbersWithStatus = await Promise.all(
         (data || []).map(async (number) => {
-          if (number.smspool_number_id && number.status === "active") {
+          if (number.smspool_number_id) {
             try {
               const smsService = new SMSPoolService(
                 process.env.NEXT_PUBLIC_SMSPOOL_API_KEY || ""
@@ -71,28 +72,72 @@ function NumbersPage() {
                 // Update status based on SMS Pool response
                 let newStatus = number.status;
                 let newExpiryDate = number.expiry_date;
+                let timeLeft = null;
 
-                // Check if number is expired based on SMS Pool status
-                if (
-                  statusResult.data.status === 0 ||
-                  statusResult.data.status === 2
-                ) {
-                  newStatus = "expired";
-                } else if (statusResult.data.status === 1) {
-                  newStatus = "active";
+                // SMS Pool status codes:
+                // 0 = Waiting for SMS
+                // 1 = SMS received
+                // 2 = Expired
+                // 3 = SMS received (different format)
+                // 4 = Cancelled
+                // 5 = Refunded
+                // 6 = Refunded (different format)
+                // 7 = Waiting for resend
+                // 8 = Resend cancelled
+
+                switch (statusResult.data.status) {
+                  case 0:
+                  case 7:
+                    newStatus = "active";
+                    break;
+                  case 1:
+                  case 3:
+                    newStatus = "completed";
+                    break;
+                  case 2:
+                    newStatus = "expired";
+                    break;
+                  case 4:
+                  case 8:
+                    newStatus = "cancelled";
+                    break;
+                  case 5:
+                  case 6:
+                    newStatus = "refunded";
+                    break;
+                  default:
+                    newStatus = "unknown";
                 }
 
-                // Update expiry date if provided by SMS Pool
-                if (statusResult.data.expiry || statusResult.data.expires_at) {
-                  newExpiryDate =
-                    statusResult.data.expiry || statusResult.data.expires_at;
+                // Calculate time left and expiry date
+                if (statusResult.data.expiration) {
+                  // Convert Unix timestamp to ISO string
+                  newExpiryDate = new Date(
+                    statusResult.data.expiration * 1000
+                  ).toISOString();
+                  const now = new Date();
+                  const expiry = new Date(statusResult.data.expiration * 1000);
+                  timeLeft = Math.max(
+                    0,
+                    Math.floor((expiry.getTime() - now.getTime()) / 1000 / 60)
+                  ); // minutes
+                } else if (statusResult.data.expires_in) {
+                  // expires_in is in seconds
+                  const expiryDate = new Date();
+                  expiryDate.setSeconds(
+                    expiryDate.getSeconds() + statusResult.data.expires_in
+                  );
+                  newExpiryDate = expiryDate.toISOString();
+                  timeLeft = Math.floor(statusResult.data.expires_in / 60); // convert to minutes
                 } else if (statusResult.data.time_left) {
+                  // time_left is typically in minutes
                   const expiryDate = new Date();
                   expiryDate.setMinutes(
                     expiryDate.getMinutes() +
                       parseInt(statusResult.data.time_left)
                   );
                   newExpiryDate = expiryDate.toISOString();
+                  timeLeft = parseInt(statusResult.data.time_left);
                 }
 
                 // Update database if status changed
@@ -114,6 +159,9 @@ function NumbersPage() {
                   ...number,
                   status: newStatus,
                   expiry_date: newExpiryDate,
+                  time_left: timeLeft,
+                  smspool_status: statusResult.data.status,
+                  smspool_message: statusResult.data.message,
                 };
               }
             } catch (error) {
@@ -129,6 +177,7 @@ function NumbersPage() {
       );
 
       setPurchasedNumbers(numbersWithStatus);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error("Error fetching purchased numbers:", error);
     } finally {
@@ -139,6 +188,13 @@ function NumbersPage() {
   useEffect(() => {
     if (user) {
       fetchPurchasedNumbers();
+
+      // Set up automatic status checking every 30 seconds
+      const interval = setInterval(() => {
+        fetchPurchasedNumbers();
+      }, 30000); // 30 seconds
+
+      return () => clearInterval(interval);
     }
   }, [user]);
 
@@ -163,7 +219,11 @@ function NumbersPage() {
   };
 
   // Helper function to get status badge
-  const getStatusBadge = (status: string, expiryDate: string) => {
+  const getStatusBadge = (
+    status: string,
+    expiryDate: string,
+    timeLeft?: number
+  ) => {
     const now = new Date();
     const expiry = new Date(expiryDate);
     const isExpired = now > expiry;
@@ -180,8 +240,41 @@ function NumbersPage() {
     if (status === "active") {
       return (
         <Badge variant="default" className="flex items-center gap-1">
-          <CheckCircle className="h-3 w-3" />
+          <Clock className="h-3 w-3" />
           Active
+        </Badge>
+      );
+    }
+
+    if (status === "completed") {
+      return (
+        <Badge
+          variant="default"
+          className="flex items-center gap-1 bg-green-100 text-green-800 border-green-200"
+        >
+          <CheckCircle className="h-3 w-3" />
+          SMS Received
+        </Badge>
+      );
+    }
+
+    if (status === "cancelled") {
+      return (
+        <Badge variant="secondary" className="flex items-center gap-1">
+          <XCircle className="h-3 w-3" />
+          Cancelled
+        </Badge>
+      );
+    }
+
+    if (status === "refunded") {
+      return (
+        <Badge
+          variant="secondary"
+          className="flex items-center gap-1 bg-blue-100 text-blue-800 border-blue-200"
+        >
+          <CheckCircle className="h-3 w-3" />
+          Refunded
         </Badge>
       );
     }
@@ -195,7 +288,24 @@ function NumbersPage() {
   };
 
   // Helper function to format time remaining
-  const getTimeRemaining = (expiryDate: string) => {
+  const getTimeRemaining = (expiryDate: string, timeLeft?: number) => {
+    // Use timeLeft from SMS Pool if available, otherwise calculate from expiry date
+    if (timeLeft !== null && timeLeft !== undefined) {
+      if (timeLeft <= 0) {
+        return "Expired";
+      }
+
+      const hours = Math.floor(timeLeft / 60);
+      const minutes = timeLeft % 60;
+
+      if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+      } else {
+        return `${minutes}m`;
+      }
+    }
+
+    // Fallback to calculating from expiry date
     const now = new Date();
     const expiry = new Date(expiryDate);
     const diff = expiry.getTime() - now.getTime();
@@ -302,19 +412,26 @@ function NumbersPage() {
                     <Phone className="h-5 w-5" />
                     Your Numbers
                   </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={fetchPurchasedNumbers}
-                    disabled={loadingNumbers}
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 mr-2 ${
-                        loadingNumbers ? "animate-spin" : ""
-                      }`}
-                    />
-                    Refresh
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={fetchPurchasedNumbers}
+                      disabled={loadingNumbers}
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 mr-2 ${
+                          loadingNumbers ? "animate-spin" : ""
+                        }`}
+                      />
+                      Refresh
+                    </Button>
+                    {lastUpdated && (
+                      <span className="text-xs text-muted-foreground">
+                        Last updated: {lastUpdated.toLocaleTimeString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -356,12 +473,16 @@ function NumbersPage() {
                               <TableCell>
                                 {getStatusBadge(
                                   number.status,
-                                  number.expiry_date
+                                  number.expiry_date,
+                                  number.time_left
                                 )}
                               </TableCell>
                               <TableCell>
                                 <span className="text-sm text-muted-foreground">
-                                  {getTimeRemaining(number.expiry_date)}
+                                  {getTimeRemaining(
+                                    number.expiry_date,
+                                    number.time_left
+                                  )}
                                 </span>
                               </TableCell>
                               <TableCell>${number.cost.toFixed(2)}</TableCell>
@@ -389,7 +510,8 @@ function NumbersPage() {
                               </div>
                               {getStatusBadge(
                                 number.status,
-                                number.expiry_date
+                                number.expiry_date,
+                                number.time_left
                               )}
                             </div>
 
@@ -423,7 +545,10 @@ function NumbersPage() {
                                   Time Left:
                                 </span>
                                 <div className="font-medium">
-                                  {getTimeRemaining(number.expiry_date)}
+                                  {getTimeRemaining(
+                                    number.expiry_date,
+                                    number.time_left
+                                  )}
                                 </div>
                               </div>
                             </div>
