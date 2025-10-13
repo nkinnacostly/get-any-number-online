@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PurchaseDialog } from "./purchase-dialog";
 import { Search, Filter, Globe } from "lucide-react";
+import { PriceDisplay } from "@/components/pricing/price-display";
 
 interface Service {
   id: string;
@@ -141,9 +142,12 @@ export function ServicesGrid({
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Price</span>
-                  <span className="text-lg font-bold">
-                    ${service.cost?.toFixed(2)}
-                  </span>
+                  <PriceDisplay
+                    usdAmount={service.cost}
+                    markupPercentage={0}
+                    showUSD={true}
+                    size="sm"
+                  />
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Valid for 24 hours from purchase

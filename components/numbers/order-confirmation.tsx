@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Clock, DollarSign, X } from "lucide-react";
+import { PriceDisplay } from "@/components/pricing/price-display";
 
 interface Service {
   id: string;
@@ -195,9 +196,12 @@ export function OrderConfirmation({
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-lg font-bold text-primary">
-                          ${option.price.toFixed(2)}
-                        </div>
+                        <PriceDisplay
+                          usdAmount={option.originalPrice}
+                          markupPercentage={35}
+                          showUSD={true}
+                          size="sm"
+                        />
                       </div>
                     </div>
                   </div>
@@ -223,12 +227,15 @@ export function OrderConfirmation({
                 Total Cost
               </span>
             </div>
-            <span className="text-2xl font-bold text-primary">
-              $
-              {(selectedPricingOption?.price || selectedCountry.price).toFixed(
-                2
-              )}
-            </span>
+            <PriceDisplay
+              usdAmount={
+                selectedPricingOption?.originalPrice ||
+                selectedCountry.price / 1.35
+              }
+              markupPercentage={35}
+              showUSD={true}
+              size="lg"
+            />
           </div>
         </CardContent>
       </Card>

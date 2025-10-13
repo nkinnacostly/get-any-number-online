@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { ExchangeRateProvider } from "@/lib/exchange-rate-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,7 @@ export default function RootLayout({
           defaultTheme="system"
           storageKey="get-any-number-online-theme"
         >
-          {children}
+          <ExchangeRateProvider>{children}</ExchangeRateProvider>
         </ThemeProvider>
       </body>
     </html>

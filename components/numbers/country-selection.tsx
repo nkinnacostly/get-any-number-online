@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, ArrowRight, SortAsc } from "lucide-react";
+import { PriceDisplay } from "@/components/pricing/price-display";
 
 interface Service {
   id: string;
@@ -156,9 +157,15 @@ export function CountrySelection({
                 </div>
               </div>
               <div className="flex items-center space-x-3">
-                <span className="font-semibold text-card-foreground group-hover:text-accent-foreground">
-                  ${country.price.toFixed(2)}
-                </span>
+                <div className="text-right">
+                  <PriceDisplay
+                    usdAmount={country.price / 1.35}
+                    markupPercentage={35}
+                    showUSD={false}
+                    size="sm"
+                    className="items-end"
+                  />
+                </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground transition-colors" />
               </div>
             </button>

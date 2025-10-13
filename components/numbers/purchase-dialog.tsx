@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Phone, DollarSign, Clock, CheckCircle } from "lucide-react";
+import { PriceDisplay } from "@/components/pricing/price-display";
 
 interface Service {
   id: string;
@@ -96,12 +97,12 @@ export function PurchaseDialog({ service, onPurchase }: PurchaseDialogProps) {
               </div>
               <div className="flex items-center justify-between border-t pt-3">
                 <span className="font-medium">Total Cost</span>
-                <div className="flex items-center space-x-1">
-                  <DollarSign className="h-4 w-4" />
-                  <span className="font-bold text-lg">
-                    {service?.cost?.toFixed(2)}
-                  </span>
-                </div>
+                <PriceDisplay
+                  usdAmount={service?.cost}
+                  markupPercentage={0}
+                  showUSD={true}
+                  size="sm"
+                />
               </div>
             </CardContent>
           </Card>

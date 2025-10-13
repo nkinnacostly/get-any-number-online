@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -541,8 +541,8 @@ function NumbersPage() {
                             const isExpanded = expandedNumber === number.id;
 
                             return (
-                              <>
-                                <TableRow key={number.id}>
+                              <Fragment key={number.id}>
+                                <TableRow>
                                   <TableCell>
                                     {hasMessages && (
                                       <Button
@@ -672,7 +672,7 @@ function NumbersPage() {
                                     </TableCell>
                                   </TableRow>
                                 )}
-                              </>
+                              </Fragment>
                             );
                           })}
                         </TableBody>
