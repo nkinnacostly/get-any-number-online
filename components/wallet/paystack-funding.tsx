@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 interface PaystackFundingProps {
   userEmail: string;
@@ -23,7 +24,8 @@ export function PaystackFunding({
   onSuccess,
   onError,
 }: PaystackFundingProps) {
-  const [amount, setAmount] = useState("");
+  const { convertNGNtoUSD } = useExchangeRate();
+  const [amount, setAmount] = useState(""); // User inputs NGN
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -74,18 +76,24 @@ export function PaystackFunding({
       setLoading(true);
       setError("");
 
+      // Convert NGN to USD for storage
+      const ngnAmount = parseFloat(amount);
+      const usdAmount = convertNGNtoUSD(ngnAmount);
+
       // Verify payment with your backend (optional but recommended)
       // For now, we'll proceed with the payment
 
-      // Create transaction record in Supabase
+      // Create transaction record in Supabase (stored in USD)
       console.log("Creating transaction record...");
       const { error: transactionError } = await supabase
         .from("transactions")
         .insert({
           user_id: userId,
           type: "deposit",
-          amount: parseFloat(amount),
-          description: `Wallet funding via Paystack - Ref: ${reference.reference}`,
+          amount: usdAmount, // Store in USD
+          description: `Wallet funding via Paystack - ₦${ngnAmount.toFixed(
+            2
+          )} - Ref: ${reference.reference}`,
           status: "completed",
         });
 
@@ -108,7 +116,7 @@ export function PaystackFunding({
         throw new Error("Failed to fetch current balance");
       }
 
-      const newBalance = (profile.wallet_balance || 0) + parseFloat(amount);
+      const newBalance = (profile.wallet_balance || 0) + usdAmount; // Add USD to balance
       console.log(
         `Updating balance from ${profile.wallet_balance} to ${newBalance}`
       );
@@ -125,7 +133,7 @@ export function PaystackFunding({
       console.log("Balance updated successfully");
 
       setSuccess(true);
-      onSuccess(parseFloat(amount));
+      onSuccess(usdAmount); // Pass USD amount
 
       // Reset form after 2 seconds
       setTimeout(() => {
@@ -152,8 +160,8 @@ export function PaystackFunding({
       return;
     }
 
-    if (parseFloat(amount) < 1) {
-      setError("Minimum funding amount is $1.00");
+    if (parseFloat(amount) < 100) {
+      setError("Minimum funding amount is ₦100.00");
       return;
     }
 
@@ -190,7 +198,7 @@ export function PaystackFunding({
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="funding-amount">Amount (USD)</Label>
+          <Label htmlFor="funding-amount">Amount (NGN)</Label>
           <Input
             id="funding-amount"
             type="number"
@@ -201,7 +209,9 @@ export function PaystackFunding({
             step="0.01"
             disabled={loading || success}
           />
-          <p className="text-sm text-muted-foreground">Minimum amount: $1.00</p>
+          <p className="text-sm text-muted-foreground">
+            Minimum amount: ₦100.00
+          </p>
         </div>
 
         <Button
@@ -223,7 +233,7 @@ export function PaystackFunding({
           ) : (
             <>
               <CreditCard className="h-4 w-4 mr-2" />
-              Fund Wallet - ${amount || "0.00"}
+              Fund Wallet - ₦{amount || "0.00"}
             </>
           )}
         </Button>

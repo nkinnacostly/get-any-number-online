@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { SMSPoolService } from "@/services/sms-pool-api";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 import {
   Phone,
   RefreshCw,
@@ -37,6 +38,7 @@ import {
 function NumbersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { formatNGN, convertUSDtoNGN } = useExchangeRate();
   const [showSuccess, setShowSuccess] = useState(false);
   const [purchasedNumber, setPurchasedNumber] = useState<any>(null);
   const [purchasedNumbers, setPurchasedNumbers] = useState<any[]>([]);
@@ -582,7 +584,7 @@ function NumbersPage() {
                                     </span>
                                   </TableCell>
                                   <TableCell>
-                                    ${number.cost.toFixed(2)}
+                                    {formatNGN(convertUSDtoNGN(number.cost))}
                                   </TableCell>
                                   <TableCell>
                                     <span className="text-sm text-muted-foreground">
@@ -742,7 +744,7 @@ function NumbersPage() {
                                     Cost:
                                   </span>
                                   <div className="font-medium">
-                                    ${number.cost.toFixed(2)}
+                                    {formatNGN(convertUSDtoNGN(number.cost))}
                                   </div>
                                 </div>
                                 <div>

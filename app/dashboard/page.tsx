@@ -15,14 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { SMSPoolService } from "@/services/sms-pool-api";
-import {
-  Phone,
-  RefreshCw,
-  Search,
-  Bell,
-  MessageSquare,
-  Users,
-} from "lucide-react";
+import { Phone, RefreshCw, Search, Bell, Users } from "lucide-react";
 
 function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -30,7 +23,6 @@ function DashboardPage() {
 
   const [services, setServices] = useState<any[]>([]);
   const [myNumbers, setMyNumbers] = useState<any[]>([]);
-  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [walletBalance, setWalletBalance] = useState(0);
   const [error, setError] = useState("");
@@ -207,26 +199,6 @@ function DashboardPage() {
       );
       const availableServices = await smsService.getAvailableServices();
       setServices(availableServices.data || []);
-
-      // Fetch recent messages
-      if (numbers && numbers.length > 0) {
-        const { data: recentMessages } = await supabase
-          .from("received_messages")
-          .select(
-            `
-            *,
-            purchased_numbers (phone_number, service_name)
-          `
-          )
-          .in(
-            "number_id",
-            numbers.map((n: any) => n.id)
-          )
-          .order("receive_date", { ascending: false })
-          .limit(10);
-
-        setMessages((recentMessages as any) || []);
-      }
     } catch (error) {
       console.error("Error fetching user data:", error);
       setError("Failed to load data. Please try again.");
@@ -356,7 +328,6 @@ function DashboardPage() {
   const stats = {
     totalNumbers: myNumbers.length,
     activeNumbers: myNumbers.filter((n: any) => n.status === "active").length,
-    totalMessages: messages.length,
     walletBalance: walletBalance,
   };
 
@@ -411,7 +382,7 @@ function DashboardPage() {
           </div>
 
           {/* Stats Cards Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
             <Card className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg group animate-in fade-in-0 slide-in-from-bottom-4">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
@@ -450,69 +421,7 @@ function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
-
-            <Card
-              className="relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-lg group animate-in fade-in-0 slide-in-from-bottom-4"
-              style={{ animationDelay: "200ms" }}
-            >
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1 transition-colors duration-200">
-                      Messages Received
-                    </p>
-                    <p className="text-2xl md:text-3xl font-bold text-foreground transition-all duration-200 group-hover:text-primary">
-                      {stats.totalMessages}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-primary transition-transform duration-200 group-hover:scale-110 group-hover:rotate-12" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
-
-          {/* Recent Messages Section */}
-          {messages.length > 0 && (
-            <div className="mt-8 mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold">
-                    Recent Messages
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {messages.slice(0, 5).map((message: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-1 h-12 bg-primary rounded-full"></div>
-                          <div>
-                            <p className="font-medium text-foreground">
-                              Message from {message.sender || "Unknown"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(message.receive_date).toLocaleString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1 truncate max-w-md">
-                              {message.message_text}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center text-primary text-sm font-medium">
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
 
           {/* Recent Numbers Section */}
           <div className="mt-8">

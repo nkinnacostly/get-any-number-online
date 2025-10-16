@@ -46,7 +46,7 @@ export function CryptomusFunding({
   onSuccess,
   onError,
 }: CryptomusFundingProps) {
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(""); // User inputs USD
   const [selectedCurrency, setSelectedCurrency] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

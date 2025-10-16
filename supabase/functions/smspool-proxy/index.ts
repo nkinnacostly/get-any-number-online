@@ -164,14 +164,15 @@ serve(async (req: Request) => {
     }
 
     const currentBalance = profile.wallet_balance || 0;
-    // Use max_price from request (this is the marked-up price the user agreed to pay)
-    // SMS Pool price is the raw cost, but we charge users the marked-up price
-    const purchasePrice = body.max_price || 0;
+    // Use user_charged_price from request (this is the marked-up price the user agreed to pay)
+    // max_price is what we send to SMS Pool (original price)
+    // user_charged_price is what we charge the user (marked-up price for our profit)
+    const purchasePrice = body.user_charged_price || body.max_price || 0;
     console.log(
-      `Current balance: ${currentBalance}, Purchase price: ${purchasePrice}`
+      `Current balance: ${currentBalance}, User charged price: ${purchasePrice}`
     );
     console.log(
-      `SMS Pool raw price: ${json?.price}, User charged price: ${body.max_price}`
+      `SMS Pool raw price: ${json?.price}, SMS Pool max_price sent: ${body.max_price}, User charged price: ${purchasePrice}`
     );
 
     if (currentBalance < purchasePrice) {

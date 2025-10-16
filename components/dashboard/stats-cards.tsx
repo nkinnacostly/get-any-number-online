@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Phone, MessageSquare, DollarSign, Clock } from "lucide-react";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 interface StatsCardsProps {
   totalNumbers: number;
@@ -17,6 +18,8 @@ export function StatsCards({
   totalMessages,
   walletBalance,
 }: StatsCardsProps) {
+  const { formatNGN, convertUSDtoNGN } = useExchangeRate();
+
   const stats = [
     {
       title: "Total Numbers",
@@ -44,10 +47,10 @@ export function StatsCards({
     },
     {
       title: "Wallet Balance",
-      value: `$${walletBalance.toFixed(2)}`,
+      value: formatNGN(convertUSDtoNGN(walletBalance)),
       icon: DollarSign,
       description: "Available funds",
-      trend: "-$5.20",
+      trend: formatNGN(convertUSDtoNGN(5.2)),
       trendUp: false,
     },
   ];

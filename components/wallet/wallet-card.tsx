@@ -17,6 +17,8 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet, Plus, CreditCard, History, Coins, Clock } from "lucide-react";
 import { CryptomusFunding } from "./cryptomus-funding";
+import { PaystackFunding } from "./paystack-funding";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 interface WalletCardProps {
   balance: number;
@@ -41,6 +43,7 @@ export function WalletCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [backgroundChecking, setBackgroundChecking] = useState(false);
+  const { formatNGN, convertUSDtoNGN } = useExchangeRate();
 
   // Listen for background checking status
   useEffect(() => {
@@ -123,7 +126,7 @@ export function WalletCard({
             {/* Balance Display */}
             <div className="space-y-2">
               <div className="text-5xl font-bold tracking-tight">
-                ${balance.toFixed(2)}
+                {formatNGN(convertUSDtoNGN(balance))}
               </div>
               <p className="text-primary-foreground/80 text-sm">
                 Available for SMS number purchases
@@ -147,22 +150,40 @@ export function WalletCard({
                   <DialogHeader>
                     <DialogTitle>Fund Your Wallet</DialogTitle>
                     <DialogDescription>
-                      Add money to your wallet using cryptocurrency payments
+                      Add money to your wallet using Paystack or cryptocurrency
                     </DialogDescription>
                   </DialogHeader>
                   {userEmail && userId ? (
-                    <div className="w-full">
-                      <div className="flex items-center justify-center space-x-2 mb-4 p-3 bg-primary/10 rounded-lg">
-                        <Coins className="h-5 w-5 text-primary" />
-                        <span className="text-sm font-medium text-primary">
-                          Cryptocurrency Funding Only
-                        </span>
+                    <div className="w-full space-y-4">
+                      {/* Paystack Funding - Default Option */}
+                      <div>
+                        <div className="flex items-center justify-center space-x-2 mb-4 p-3 bg-green-500/10 rounded-lg">
+                          <CreditCard className="h-5 w-5 text-green-600" />
+                          <span className="text-sm font-medium text-green-600">
+                            Paystack Payment (Recommended)
+                          </span>
+                        </div>
+                        <PaystackFunding
+                          userEmail={userEmail}
+                          userId={userId}
+                          onSuccess={onDeposit}
+                        />
                       </div>
-                      <CryptomusFunding
-                        userEmail={userEmail}
-                        userId={userId}
-                        onSuccess={onDeposit}
-                      />
+
+                      {/* Alternative: Crypto Funding */}
+                      <details className="border rounded-lg p-4">
+                        <summary className="cursor-pointer font-medium text-sm flex items-center gap-2">
+                          <Coins className="h-4 w-4 text-primary" />
+                          Alternative: Fund with Cryptocurrency (USD)
+                        </summary>
+                        <div className="mt-4">
+                          <CryptomusFunding
+                            userEmail={userEmail}
+                            userId={userId}
+                            onSuccess={onDeposit}
+                          />
+                        </div>
+                      </details>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -210,11 +231,13 @@ export function WalletCard({
                   Total Deposited
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  ${totalDeposited.toFixed(2)}
+                  {formatNGN(convertUSDtoNGN(totalDeposited))}
                 </p>
                 <div className="flex items-center text-green-600 text-xs">
                   <Plus className="h-3 w-3 mr-1" />
-                  <span>+${totalDeposited.toFixed(2)} total</span>
+                  <span>
+                    +{formatNGN(convertUSDtoNGN(totalDeposited))} total
+                  </span>
                 </div>
               </div>
               <div className="p-3 bg-green-500/10 rounded-xl group-hover:bg-green-500/20 transition-colors">
@@ -232,11 +255,11 @@ export function WalletCard({
                   Total Spent
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  ${totalSpent.toFixed(2)}
+                  {formatNGN(convertUSDtoNGN(totalSpent))}
                 </p>
                 <div className="flex items-center text-red-600 text-xs">
                   <CreditCard className="h-3 w-3 mr-1" />
-                  <span>${totalSpent.toFixed(2)} total</span>
+                  <span>{formatNGN(convertUSDtoNGN(totalSpent))} total</span>
                 </div>
               </div>
               <div className="p-3 bg-red-500/10 rounded-xl group-hover:bg-red-500/20 transition-colors">

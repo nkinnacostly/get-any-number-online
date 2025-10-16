@@ -24,9 +24,10 @@ import {
   Menu,
   Mail,
 } from "lucide-react";
-import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+// import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 const navigation = [
   {
@@ -35,7 +36,7 @@ const navigation = [
     icon: Home,
   },
   {
-    name: "My Numbers",
+    name: "Get Any Number",
     href: "/numbers",
     icon: Phone,
   },
@@ -74,9 +75,10 @@ export function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
-  const { unreadCount, loading } = useUnreadMessages();
+  // const { unreadCount, loading } = useUnreadMessages();
   const { user } = useAuth();
-  const [walletBalance, setWalletBalance] = useState(0);
+  const { formatNGN, convertUSDtoNGN } = useExchangeRate();
+  const [walletBalance, setWalletBalance] = useState(0); // USD from DB
 
   useEffect(() => {
     if (user) {
@@ -142,14 +144,14 @@ export function Sidebar({
                     <span className="transition-all duration-200">
                       {item.name}
                     </span>
-                    {item.name === "Messages" && unreadCount > 0 && (
+                    {/* {item.name === "Messages" && unreadCount > 0 && (
                       <Badge
                         variant="destructive"
                         className="ml-auto transition-all duration-200 group-hover:scale-110 animate-pulse"
                       >
                         {unreadCount}
                       </Badge>
-                    )}
+                    )} */}
                   </Link>
                 </Button>
               ))}
@@ -167,24 +169,10 @@ export function Sidebar({
                     variant="outline"
                     className="transition-all duration-200 hover:scale-105 hover:shadow-sm"
                   >
-                    ${walletBalance.toFixed(2)}
+                    {formatNGN(convertUSDtoNGN(walletBalance))}
                   </Badge>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                className="w-full justify-start transition-all duration-200 hover:scale-[1.02] hover:shadow-sm group"
-                asChild
-                onClick={isMobile ? onMobileClose : undefined}
-              >
-                <Link
-                  href="/wallet/deposit"
-                  className="animate-in fade-in-0 slide-in-from-left-2"
-                >
-                  <CreditCard className="mr-2 h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-                  <span className="transition-all duration-200">Add Funds</span>
-                </Link>
-              </Button>
             </div>
           </div>
         </div>

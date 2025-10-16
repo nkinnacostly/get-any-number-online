@@ -115,6 +115,7 @@ export class SMSPoolService {
     options: {
       pool?: string;
       max_price?: number;
+      user_charged_price?: number; // The marked-up price we charge the user
       pricing_option?: number;
       quantity?: number;
       areacode?: string[];

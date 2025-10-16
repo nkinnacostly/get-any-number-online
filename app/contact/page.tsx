@@ -162,7 +162,7 @@ export default function ContactPage() {
                               <p className="text-sm text-muted-foreground">
                                 Nigeria
                                 <br />
-                                Lagos, Nigeria
+                                Calabar, Cross River State
                               </p>
                             </div>
                           </div>

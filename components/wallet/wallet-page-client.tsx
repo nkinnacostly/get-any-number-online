@@ -17,13 +17,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 import { Wallet, CreditCard, Minus, Plus } from "lucide-react";
 
 export function WalletPageClient() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { formatNGN, convertUSDtoNGN } = useExchangeRate();
 
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState(0); // Stored in USD in DB
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalDeposited, setTotalDeposited] = useState(0);
@@ -53,7 +55,7 @@ export function WalletPageClient() {
       if (event.detail.amount) {
         // You can add a toast notification here
         console.log(
-          `Payment of $${event.detail.amount} completed successfully!`
+          `Payment of ₦${event.detail.amount} completed successfully!`
         );
       }
     };
@@ -292,8 +294,10 @@ export function WalletPageClient() {
                                 : "text-red-600"
                             }
                           >
-                            {transaction.amount > 0 ? "+" : ""}$
-                            {Math.abs(transaction.amount).toFixed(2)}
+                            {transaction.amount > 0 ? "+" : ""}
+                            {formatNGN(
+                              convertUSDtoNGN(Math.abs(transaction.amount))
+                            )}
                           </TableCell>
                           <TableCell>
                             {new Date(

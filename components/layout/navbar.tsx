@@ -19,12 +19,14 @@ import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileSidebar } from "@/components/layout/sidebar";
 import { supabase } from "@/lib/supabase";
+import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 export function Navbar() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const { formatNGN, convertUSDtoNGN } = useExchangeRate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(0); // USD from DB
 
   useEffect(() => {
     if (user) {
@@ -101,7 +103,7 @@ export function Navbar() {
             {user ? (
               <>
                 <Badge variant="secondary" className="hidden sm:inline-flex">
-                  Balance: ${walletBalance.toFixed(2)}
+                  Balance: {formatNGN(convertUSDtoNGN(walletBalance))}
                 </Badge>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -620,15 +620,27 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         pricingOptions.sort((a, b) => a.price - b.price);
 
         // Update the country with all pricing options
-        setSelectedCountry({
+        const updatedCountry = {
           ...country,
           pricingOptions: pricingOptions,
           price: pricingOptions[0].price, // Use cheapest as default
-        });
+        };
+        setSelectedCountry(updatedCountry);
+
+        // Automatically select the first (cheapest) pool
+        setSelectedPricingOption(pricingOptions[0]);
+      } else {
+        // If no pricing data, use the country's existing pricing options
+        if (country.pricingOptions && country.pricingOptions.length > 0) {
+          setSelectedPricingOption(country.pricingOptions[0]);
+        }
       }
     } catch (error) {
       console.error("Error fetching real-time pricing:", error);
       // Continue with the existing pricing options if API call fails
+      if (country.pricingOptions && country.pricingOptions.length > 0) {
+        setSelectedPricingOption(country.pricingOptions[0]);
+      }
     }
 
     setCurrentStep("confirmation");
@@ -715,7 +727,8 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
             selectedCountry.id,
             {
               pool: pricingOption.pool.toString(),
-              max_price: pricingOption.price, // Use the selected price as max
+              max_price: pricingOption.originalPrice, // Send original SMS Pool price
+              user_charged_price: pricingOption.price, // The marked-up price we charge user
               user_id: user.id,
               service_name: selectedService.name,
             }

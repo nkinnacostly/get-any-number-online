@@ -416,7 +416,7 @@ export default function SettingsPage() {
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <Label htmlFor="api_rate_limit">
                         API Rate Limit (per minute)
                       </Label>
@@ -432,13 +432,13 @@ export default function SettingsPage() {
                         }
                         placeholder="100"
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Integration Settings */}
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Globe className="h-5 w-5" />
@@ -485,7 +485,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                 </CardContent>
-              </Card>
+              </Card> */}
 
               {/* Danger Zone */}
               <Card className="border-red-200">

@@ -199,7 +199,7 @@ export function OrderConfirmation({
                         <PriceDisplay
                           usdAmount={option.originalPrice}
                           markupPercentage={35}
-                          showUSD={true}
+                          // showUSD={true}
                           size="sm"
                         />
                       </div>
@@ -233,7 +233,7 @@ export function OrderConfirmation({
                 selectedCountry.price / 1.35
               }
               markupPercentage={35}
-              showUSD={true}
+              // showUSD={true}
               size="lg"
             />
           </div>

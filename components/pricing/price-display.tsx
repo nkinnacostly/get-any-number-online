@@ -26,7 +26,7 @@ interface PriceDisplayProps {
 export function PriceDisplay({
   usdAmount,
   markupPercentage = 35,
-  showUSD = true,
+  // showUSD = true,
   showMarkupBadge = false,
   className = "",
   size = "md",
@@ -46,11 +46,11 @@ export function PriceDisplay({
     lg: "text-2xl",
   };
 
-  const subTextClasses = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
-  };
+  // const subTextClasses = {
+  //   sm: "text-xs",
+  //   md: "text-sm",
+  //   lg: "text-base",
+  // };
 
   return (
     <div className={`flex flex-col ${className}`}>
@@ -66,13 +66,13 @@ export function PriceDisplay({
           </Badge>
         )}
       </div>
-      {showUSD && (
+      {/* {showUSD && (
         <span
           className={`text-gray-500 dark:text-gray-400 ${subTextClasses[size]}`}
         >
           {formatUSD(usdAmount)} USD
         </span>
-      )}
+      )} */}
     </div>
   );
 }

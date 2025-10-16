@@ -115,6 +115,27 @@ export default function MessagesPage() {
     }
   };
 
+  const deleteMessage = async (messageId: string) => {
+    try {
+      const { error } = await supabase
+        .from("received_messages")
+        .delete()
+        .eq("id", messageId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state to remove the deleted message
+      setMessages((prevMessages) =>
+        prevMessages.filter((msg: any) => msg.id !== messageId)
+      );
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      throw error;
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -156,6 +177,7 @@ export default function MessagesPage() {
             messages={messages}
             onRefresh={fetchMessages}
             onCheckMessages={checkForNewMessages}
+            onDeleteMessage={deleteMessage}
             loading={loading}
             checkingMessages={checkingMessages}
           />

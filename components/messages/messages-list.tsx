@@ -13,7 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MessageSquare, Search, RefreshCw, Phone, Clock } from "lucide-react";
+import {
+  MessageSquare,
+  Search,
+  RefreshCw,
+  Phone,
+  Clock,
+  Trash2,
+} from "lucide-react";
 
 interface Message {
   id: string;
@@ -31,6 +38,7 @@ interface MessagesListProps {
   messages: Message[];
   onRefresh: () => void;
   onCheckMessages?: () => void;
+  onDeleteMessage?: (messageId: string) => Promise<void>;
   loading?: boolean;
   checkingMessages?: boolean;
 }
@@ -39,11 +47,15 @@ export function MessagesList({
   messages,
   onRefresh,
   onCheckMessages,
+  onDeleteMessage,
   loading = false,
   checkingMessages = false,
 }: MessagesListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedNumber, setSelectedNumber] = useState("");
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(
+    null
+  );
 
   // Get unique phone numbers for filter
   const phoneNumbers = Array.from(
@@ -62,6 +74,25 @@ export function MessagesList({
   });
 
   const unreadCount = messages.filter((m) => !m.is_read).length;
+
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!onDeleteMessage) return;
+
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this message? This action cannot be undone."
+    );
+    if (!confirmDelete) return;
+
+    try {
+      setDeletingMessageId(messageId);
+      await onDeleteMessage(messageId);
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      alert("Failed to delete message. Please try again.");
+    } finally {
+      setDeletingMessageId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -159,7 +190,7 @@ export function MessagesList({
                   <TableHead>Sender</TableHead>
                   <TableHead>Message</TableHead>
                   <TableHead>Received</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -195,11 +226,15 @@ export function MessagesList({
                       </div>
                     </TableCell>
                     <TableCell>
-                      {message.is_read ? (
-                        <Badge variant="outline">Read</Badge>
-                      ) : (
-                        <Badge variant="default">Unread</Badge>
-                      )}
+                      <Button
+                        onClick={() => handleDeleteMessage(message.id)}
+                        disabled={deletingMessageId === message.id}
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

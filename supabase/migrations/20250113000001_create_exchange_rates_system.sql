@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS exchange_rates (
 );
 
 -- Index for faster lookups of active rates
-CREATE INDEX idx_exchange_rates_active ON exchange_rates(is_active, created_at DESC);
-CREATE INDEX idx_exchange_rates_currencies ON exchange_rates(base_currency, target_currency);
+CREATE INDEX IF NOT EXISTS idx_exchange_rates_active ON exchange_rates(is_active, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_exchange_rates_currencies ON exchange_rates(base_currency, target_currency);
 
 -- Services pricing table to cache converted Naira prices
 CREATE TABLE IF NOT EXISTS service_pricing (
@@ -32,8 +32,8 @@ CREATE TABLE IF NOT EXISTS service_pricing (
 );
 
 -- Index for faster service lookups
-CREATE INDEX idx_service_pricing_name ON service_pricing(service_name);
-CREATE INDEX idx_service_pricing_updated ON service_pricing(updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_service_pricing_name ON service_pricing(service_name);
+CREATE INDEX IF NOT EXISTS idx_service_pricing_updated ON service_pricing(updated_at DESC);
 
 -- Update user_wallets table to include Naira balance if it exists
 DO $$
@@ -50,32 +50,38 @@ ALTER TABLE exchange_rates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE service_pricing ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for exchange_rates
+DROP POLICY IF EXISTS "Allow public read access to active exchange rates" ON exchange_rates;
 CREATE POLICY "Allow public read access to active exchange rates" 
 ON exchange_rates
 FOR SELECT 
 USING (is_active = true);
 
+DROP POLICY IF EXISTS "Allow authenticated users to insert exchange rates" ON exchange_rates;
 CREATE POLICY "Allow authenticated users to insert exchange rates"
 ON exchange_rates
 FOR INSERT
 WITH CHECK (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Allow authenticated users to update exchange rates" ON exchange_rates;
 CREATE POLICY "Allow authenticated users to update exchange rates"
 ON exchange_rates
 FOR UPDATE
 USING (auth.role() = 'authenticated');
 
 -- RLS Policies for service_pricing
+DROP POLICY IF EXISTS "Allow public read access to service pricing" ON service_pricing;
 CREATE POLICY "Allow public read access to service pricing" 
 ON service_pricing
 FOR SELECT 
 USING (true);
 
+DROP POLICY IF EXISTS "Allow authenticated users to insert service pricing" ON service_pricing;
 CREATE POLICY "Allow authenticated users to insert service pricing"
 ON service_pricing
 FOR INSERT
 WITH CHECK (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Allow authenticated users to update service pricing" ON service_pricing;
 CREATE POLICY "Allow authenticated users to update service pricing"
 ON service_pricing
 FOR UPDATE

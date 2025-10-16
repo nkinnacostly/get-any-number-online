@@ -142,6 +142,16 @@ CREATE POLICY "Users can view messages for own numbers" ON public.received_messa
 CREATE POLICY "Service role can insert messages" ON public.received_messages
   FOR INSERT WITH CHECK (true);
 
+-- Users can delete messages for their own numbers
+CREATE POLICY "Users can delete messages for own numbers" ON public.received_messages
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM public.purchased_numbers 
+      WHERE purchased_numbers.id = received_messages.number_id 
+      AND purchased_numbers.user_id = auth.uid()
+    )
+  );
+
 -- Transactions: Users can only see their own transactions
 CREATE POLICY "Users can view own transactions" ON public.transactions
   FOR SELECT USING (auth.uid() = user_id);
