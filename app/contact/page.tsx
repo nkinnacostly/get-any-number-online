@@ -162,7 +162,8 @@ export default function ContactPage() {
                               <p className="text-sm text-muted-foreground">
                                 Nigeria
                                 <br />
-                                Calabar, Cross River State
+                                Behind Redeemed Christian Church of God,
+                                Ekorinum Calabar, Cross River State
                               </p>
                             </div>
                           </div>
