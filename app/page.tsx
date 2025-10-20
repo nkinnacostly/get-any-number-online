@@ -582,6 +582,29 @@ export default function HomePage() {
           </div>
         </section>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-muted/50 border-t border-border py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground space-y-4 md:space-y-0">
+            <p>© 2025 Get Any Number Online. All rights reserved.</p>
+            <div className="flex items-center space-x-6">
+              <Link
+                href="/terms-and-privacy"
+                className="hover:text-primary transition-colors"
+              >
+                Terms & Privacy
+              </Link>
+              <Link
+                href="/contact"
+                className="hover:text-primary transition-colors"
+              >
+                Contact
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </motion.div>
   );
 }
