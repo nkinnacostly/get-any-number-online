@@ -15,9 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Wallet, Plus, CreditCard, History, Coins, Clock } from "lucide-react";
+import { Wallet, Plus, CreditCard, History, Coins, Clock, Zap } from "lucide-react";
 import { CryptomusFunding } from "./cryptomus-funding";
 import { PaystackFunding } from "./paystack-funding";
+import { FlutterwaveFunding } from "./flutterwave-funding";
 import { useExchangeRate } from "@/hooks/useExchangeRate";
 
 interface WalletCardProps {
@@ -155,26 +156,44 @@ export function WalletCard({
                   </DialogHeader>
                   {userEmail && userId ? (
                     <div className="w-full space-y-4">
-                      {/* Paystack Funding - Default Option */}
-                      <div>
-                        <div className="flex items-center justify-center space-x-2 mb-4 p-3 bg-green-500/10 rounded-lg">
-                          <CreditCard className="h-5 w-5 text-green-600" />
-                          <span className="text-sm font-medium text-green-600">
-                            Paystack Payment (Recommended)
-                          </span>
+                      {/* Primary Payment Options */}
+                      <div className="space-y-4">
+                        {/* Flutterwave - Primary Recommended Option */}
+                        <div>
+                          <div className="flex items-center justify-center space-x-2 mb-4 p-3 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-lg border border-orange-200/50">
+                            <Zap className="h-5 w-5 text-orange-600" />
+                            <span className="text-sm font-medium text-orange-600">
+                              Flutterwave Payment (Fast & Easy)
+                            </span>
+                          </div>
+                          <FlutterwaveFunding
+                            userEmail={userEmail}
+                            userId={userId}
+                            onSuccess={onDeposit}
+                          />
                         </div>
-                        <PaystackFunding
-                          userEmail={userEmail}
-                          userId={userId}
-                          onSuccess={onDeposit}
-                        />
+
+                        {/* Paystack - Alternative Card Payment */}
+                        <details className="border rounded-lg p-4 bg-green-500/5 border-green-200/50">
+                          <summary className="cursor-pointer font-medium text-sm flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-green-600" />
+                            Alternative: Paystack Payment
+                          </summary>
+                          <div className="mt-4">
+                            <PaystackFunding
+                              userEmail={userEmail}
+                              userId={userId}
+                              onSuccess={onDeposit}
+                            />
+                          </div>
+                        </details>
                       </div>
 
-                      {/* Alternative: Crypto Funding */}
+                      {/* Crypto Funding - Advanced Option */}
                       <details className="border rounded-lg p-4">
                         <summary className="cursor-pointer font-medium text-sm flex items-center gap-2">
                           <Coins className="h-4 w-4 text-primary" />
-                          Alternative: Fund with Cryptocurrency (USD)
+                          Advanced: Fund with Cryptocurrency (USD)
                         </summary>
                         <div className="mt-4">
                           <CryptomusFunding
@@ -184,6 +203,14 @@ export function WalletCard({
                           />
                         </div>
                       </details>
+
+                      {/* Payment Methods Info */}
+                      <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 space-y-1">
+                        <p className="font-medium text-foreground">💳 Payment Options:</p>
+                        <p>• <strong>Flutterwave:</strong> Cards, Bank Transfer, USSD</p>
+                        <p>• <strong>Paystack:</strong> Cards & Bank Transfer</p>
+                        <p>• <strong>Crypto:</strong> BTC, ETH, USDT, and more</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
