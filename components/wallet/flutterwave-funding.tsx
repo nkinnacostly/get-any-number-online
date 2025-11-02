@@ -201,6 +201,8 @@ export function FlutterwaveFunding({
    * Initiate payment using Flutterwave inline checkout
    */
   const handlePayment = () => {
+    console.log("Fund Wallet button clicked");
+
     if (!amount || parseFloat(amount) <= 0) {
       setError("Please enter a valid amount");
       return;
@@ -211,18 +213,34 @@ export function FlutterwaveFunding({
       return;
     }
 
+    // Check if public key is configured
+    const publicKey = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
+    console.log("Public key configured:", publicKey ? "Yes" : "No");
+
+    if (!publicKey) {
+      setError("Payment system not configured. Please contact support.");
+      console.error("NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY is not set");
+      return;
+    }
+
+    // Check if script is loaded
+    console.log("Script loaded:", scriptLoaded);
+    console.log("FlutterwaveCheckout available:", !!window.FlutterwaveCheckout);
+
     if (!scriptLoaded || !window.FlutterwaveCheckout) {
       setError("Payment system not ready. Please refresh the page.");
       return;
     }
 
     setError("");
+    setLoading(true);
 
     const txRef = generateTxRef();
+    console.log("Generated tx_ref:", txRef);
 
     // Flutterwave configuration
     const config = {
-      public_key: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY || "",
+      public_key: publicKey,
       tx_ref: txRef,
       amount: parseFloat(amount),
       currency: "NGN",
@@ -255,12 +273,22 @@ export function FlutterwaveFunding({
       },
     };
 
+    console.log("Opening Flutterwave modal with config:", {
+      tx_ref: config.tx_ref,
+      amount: config.amount,
+      currency: config.currency,
+      user_id: userId,
+    });
+
     // Open Flutterwave payment modal
     try {
       window.FlutterwaveCheckout(config);
     } catch (err: any) {
       console.error("Error opening payment modal:", err);
-      setError("Failed to open payment modal. Please try again.");
+      setError(
+        `Failed to open payment modal: ${err.message || "Unknown error"}`
+      );
+      setLoading(false);
       onError?.(err);
     }
   };
@@ -274,6 +302,27 @@ export function FlutterwaveFunding({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* System Status Indicator (only show if there's an issue) */}
+        {!scriptLoaded && (
+          <Alert className="border-yellow-200 bg-yellow-50">
+            <Loader2 className="h-4 w-4 text-yellow-600 animate-spin" />
+            <AlertDescription className="text-yellow-800">
+              Loading payment system...
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {scriptLoaded &&
+          typeof window !== "undefined" &&
+          !window.FlutterwaveCheckout && (
+            <Alert variant="destructive">
+              <XCircle className="h-4 w-4" />
+              <AlertDescription>
+                Payment system failed to load. Please refresh the page.
+              </AlertDescription>
+            </Alert>
+          )}
+
         {success && (
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle className="h-4 w-4 text-green-600" />

@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "check-env": "node check-env.js",
+    "prebuild": "node check-env.js || true"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
