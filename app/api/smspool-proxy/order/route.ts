@@ -29,9 +29,14 @@ export async function POST(request: NextRequest) {
     );
 
     if (!response.ok) {
-      throw new Error(
-        `Edge function responded with status: ${response.statusText}`
-      );
+      // Try to get the error details from the response body
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage =
+        errorData.error ||
+        errorData.message ||
+        `Edge function responded with status: ${response.statusText}`;
+      console.error("Edge function error details:", errorData);
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();

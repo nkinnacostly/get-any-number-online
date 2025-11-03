@@ -768,6 +768,16 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
           );
         } else if (result?.error?.includes("User profile not found")) {
           setError("Account error. Please try logging out and back in.");
+        } else if (result?.error?.includes("whitelist-only")) {
+          setError(
+            `⚠️ Service Restricted: ${selectedService.name} requires special approval from our SMS provider. Please try a different service or contact support for access.`
+          );
+        } else if (
+          result?.error?.includes("SMS Pool account has insufficient balance")
+        ) {
+          setError(
+            "Service temporarily unavailable. Our SMS provider account needs funding. Please contact support or try again later."
+          );
         } else if (
           result?.error?.includes("Network error") ||
           result?.error?.includes("timeout")
@@ -788,6 +798,20 @@ export function PurchaseFlow({ onPurchaseComplete }: PurchaseFlowProps) {
         error.message.includes("Insufficient wallet balance")
       ) {
         setError(error.message);
+      } else if (
+        error instanceof Error &&
+        error.message.includes("whitelist-only")
+      ) {
+        setError(
+          `⚠️ Service Restricted: ${selectedService.name} requires special approval from our SMS provider. Please try a different service or contact support for access.`
+        );
+      } else if (
+        error instanceof Error &&
+        error.message.includes("SMS Pool account has insufficient balance")
+      ) {
+        setError(
+          "Service temporarily unavailable. Our SMS provider account needs funding. Please contact support or try again later."
+        );
       } else if (error instanceof Error && error.message.includes("Network")) {
         setError("Network error. Please check your connection and try again.");
       } else {
