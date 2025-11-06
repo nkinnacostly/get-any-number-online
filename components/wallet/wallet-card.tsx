@@ -17,7 +17,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wallet, Plus, CreditCard, History, Coins, Clock, Zap } from "lucide-react";
 import { CryptomusFunding } from "./cryptomus-funding";
-import { PaystackFunding } from "./paystack-funding";
 import { FlutterwaveFunding } from "./flutterwave-funding";
 import { useExchangeRate } from "@/hooks/useExchangeRate";
 
@@ -44,6 +43,7 @@ export function WalletCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [backgroundChecking, setBackgroundChecking] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { formatNGN, convertUSDtoNGN } = useExchangeRate();
 
   // Listen for background checking status
@@ -136,7 +136,7 @@ export function WalletCard({
 
             {/* Action Button */}
             <div className="flex justify-center">
-              <Dialog>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button
                     variant="secondary"
@@ -151,7 +151,7 @@ export function WalletCard({
                   <DialogHeader>
                     <DialogTitle>Fund Your Wallet</DialogTitle>
                     <DialogDescription>
-                      Add money to your wallet using Paystack or cryptocurrency
+                      Add money to your wallet using Flutterwave or cryptocurrency
                     </DialogDescription>
                   </DialogHeader>
                   {userEmail && userId ? (
@@ -169,24 +169,13 @@ export function WalletCard({
                           <FlutterwaveFunding
                             userEmail={userEmail}
                             userId={userId}
-                            onSuccess={onDeposit}
+                            onSuccess={async (amount) => {
+                              await onDeposit(amount);
+                              setDialogOpen(false);
+                            }}
+                            onPaymentStart={() => setDialogOpen(false)}
                           />
                         </div>
-
-                        {/* Paystack - Alternative Card Payment */}
-                        <details className="border rounded-lg p-4 bg-green-500/5 border-green-200/50">
-                          <summary className="cursor-pointer font-medium text-sm flex items-center gap-2">
-                            <CreditCard className="h-4 w-4 text-green-600" />
-                            Alternative: Paystack Payment
-                          </summary>
-                          <div className="mt-4">
-                            <PaystackFunding
-                              userEmail={userEmail}
-                              userId={userId}
-                              onSuccess={onDeposit}
-                            />
-                          </div>
-                        </details>
                       </div>
 
                       {/* Crypto Funding - Advanced Option */}
@@ -208,7 +197,6 @@ export function WalletCard({
                       <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 space-y-1">
                         <p className="font-medium text-foreground">💳 Payment Options:</p>
                         <p>• <strong>Flutterwave:</strong> Cards, Bank Transfer, USSD</p>
-                        <p>• <strong>Paystack:</strong> Cards & Bank Transfer</p>
                         <p>• <strong>Crypto:</strong> BTC, ETH, USDT, and more</p>
                       </div>
                     </div>

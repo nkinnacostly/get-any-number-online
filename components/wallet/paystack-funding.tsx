@@ -16,6 +16,7 @@ interface PaystackFundingProps {
   userId: string;
   onSuccess: (amount: number) => void;
   onError?: (error: any) => void;
+  onPaymentStart?: () => void; // Callback when Paystack modal opens
 }
 
 export function PaystackFunding({
@@ -23,6 +24,7 @@ export function PaystackFunding({
   userId,
   onSuccess,
   onError,
+  onPaymentStart,
 }: PaystackFundingProps) {
   const { convertNGNtoUSD } = useExchangeRate();
   const [amount, setAmount] = useState(""); // User inputs NGN
@@ -166,6 +168,10 @@ export function PaystackFunding({
     }
 
     setError("");
+    
+    // Notify parent that payment is starting (to close parent dialog)
+    onPaymentStart?.();
+    
     initializePayment({
       onSuccess: onPaystackSuccess,
       onClose: onPaystackClose,

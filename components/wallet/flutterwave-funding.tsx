@@ -22,6 +22,7 @@ interface FlutterwaveFundingProps {
   userId: string;
   onSuccess: (amount: number) => void;
   onError?: (error: any) => void;
+  onPaymentStart?: () => void; // Callback when Flutterwave modal opens
 }
 
 /**
@@ -53,6 +54,7 @@ export function FlutterwaveFunding({
   userId,
   onSuccess,
   onError,
+  onPaymentStart,
 }: FlutterwaveFundingProps) {
   const { convertNGNtoUSD, formatNGN } = useExchangeRate();
   const [amount, setAmount] = useState(""); // User inputs NGN
@@ -279,6 +281,9 @@ export function FlutterwaveFunding({
       currency: config.currency,
       user_id: userId,
     });
+
+    // Notify parent that payment is starting (to close parent dialog)
+    onPaymentStart?.();
 
     // Open Flutterwave payment modal
     try {
